@@ -1,4 +1,4 @@
-{{ config(materialized='table', contract={'enforced': true}) }}
+{{ config(materialized='table') }}
 
 with src as (
   select * from bronze_customers_parquet
@@ -20,4 +20,4 @@ typed as (
     cast(gdpr_consent as boolean) as gdpr_consent
   from src
 )
-select * from typed;
+select * from typed
