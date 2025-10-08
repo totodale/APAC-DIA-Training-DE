@@ -1,23 +1,30 @@
-{{ config(materialized='table', contract={'enforced': true}) }}
+{{ config(materialized='table') }}
 
 with src as (
-  select * from bronze_customers_parquet
+  select * from {{ ref('_sources') }}
 ),
 typed as (
   select
     cast(customer_id as bigint) as customer_id,
-    natural_key,
+    trim(natural_key) as natural_key,
     trim(first_name) as first_name,
     trim(last_name) as last_name,
-    email,
-    phone,
-    address_line1, address_line2, city, state_region, postcode, country_code,
+    concat(first_name,' ',last_name) as full_name,
+    trim(email) as email,
+    trim(phone) as phone,
+    trim(address_line1) as address_line1, 
+    trim(address_line2) as address_line2, 
+    trim(city) as city, 
+    trim(state_region) as state_region, 
+    trim(postcode) as postcode, 
+    trim(country_code) as country_code,
     cast(latitude as double) as latitude,
     cast(longitude as double) as longitude,
     cast(birth_date as date) as birth_date,
-    cast(join_ts as timestamp) as join_ts_utc,
+    cast(join_ts as timestamp) as join_ts,
     cast(is_vip as boolean) as is_vip,
-    cast(gdpr_consent as boolean) as gdpr_consent
+    cast(gdpr_consent as boolean) as gdpr_consent,
+    cast(ingestion_ts as datetime) as ingestion_ts
   from src
 )
-select * from typed;
+select * from typed

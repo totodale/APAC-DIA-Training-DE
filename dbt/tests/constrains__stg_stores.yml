@@ -1,0 +1,6 @@
+version: 2
+models:
+  - name: stores
+    columns:
+      - name: store_id
+        tests: [not_null, unique]

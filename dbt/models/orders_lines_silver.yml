@@ -1,0 +1,59 @@
+version: 2
+models:
+  - name: orders_lines_silver
+    config:
+      contract:
+        enforced: true
+      description: "orders lines table"
+    columns: 
+      - name: order_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: line_number
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: product_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: qty
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: unit_price
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: line_discount_pct
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: tax_pct
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: varchar
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+
+   

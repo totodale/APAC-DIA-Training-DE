@@ -1,0 +1,31 @@
+
+  
+    
+    
+
+    create  table
+      "warehouse"."main_stg"."stg_orders_headers__dbt_tmp"
+  
+    as (
+      
+
+with src as (
+  select * from bronze_orders_headers_parquet
+),
+typed as (
+  select
+    cast(order_id as bigint) as order_id,
+    cast(order_ts as datetime) as order_ts,
+    cast(order_dt_local as date) as date,
+    cast(customer_id as bigint) as customer_id,
+    cast(channel as bigint) as channel,
+    payment_method,
+    coupon_code,
+    cast(shipping_fee as bigint) as channel,
+    currency
+  from src
+)
+select * from typed;
+    );
+  
+  

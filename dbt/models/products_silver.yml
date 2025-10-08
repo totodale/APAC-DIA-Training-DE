@@ -1,0 +1,70 @@
+version: 2
+models:
+  - name: products_silver
+    config:
+      contract:
+        enforced: true
+      description: "products table"
+    columns: 
+      - name: product_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null, unique]
+      - name: sku
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: name
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: category
+        data_type: string  
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: subcategory
+        data_type: varchar
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: current_price
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: currency
+        data_type: string 
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: is_discontinued
+        data_type: boolean
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: introduced_dt
+        data_type: date  
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: discontinued_dt
+        data_type: date
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+   

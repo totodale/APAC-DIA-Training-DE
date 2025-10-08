@@ -1,0 +1,8 @@
+version: 2
+models:
+  - name: sensors
+    columns:
+      - name: store_id
+        tests: [not_null, unique]
+      - name: shelf_id
+        tests: [not_null, unique]

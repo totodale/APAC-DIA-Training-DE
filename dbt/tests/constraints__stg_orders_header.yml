@@ -1,0 +1,10 @@
+version: 2
+models:
+  - name: orders_header
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests: [not_null, unique]
+      - name: store_id
+        tests: [not_null, unique]

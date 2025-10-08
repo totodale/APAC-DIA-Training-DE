@@ -1,0 +1,53 @@
+version: 2
+models:
+  - name: sensors_silver
+    config:
+      contract:
+        enforced: true
+      description: "sensors table"
+    columns: 
+      - name: sensor_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: store_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: shelf_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: temperature_c
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: humidity_pct
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: battery_mv
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+
+   

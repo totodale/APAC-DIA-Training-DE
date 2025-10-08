@@ -1,0 +1,8 @@
+version: 2
+models:
+  - name: orders_lines
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: product_id
+        tests: [not_null, unique]

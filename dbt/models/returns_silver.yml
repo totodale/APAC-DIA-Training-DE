@@ -1,0 +1,54 @@
+version: 2
+models:
+  - name: returns_silver
+    config:
+      contract:
+        enforced: true
+      description: "returns table"
+    columns: 
+      - name: return_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: order_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: product_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: return_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: qty
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: reason
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+
+   

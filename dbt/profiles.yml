@@ -1,0 +1,10 @@
+local_duckdb:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: 'C:/Users/dperias/APAC-DIA-Training-DE/duckdb/warehouse.duckdb'
+      threads: 4
+      extensions:
+        - delta
+        - parquet

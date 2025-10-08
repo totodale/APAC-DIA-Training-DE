@@ -1,0 +1,53 @@
+version: 2
+models:
+  - name: shipments_silver
+    config:
+      contract:
+        enforced: true
+      description: "shipments table"
+    columns: 
+      - name: shipment_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: order_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+          - type: unique
+        tests: [not_null, unique]
+      - name: carrier
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: shipped_at
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: delivered_at
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ship_cost
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+
+   

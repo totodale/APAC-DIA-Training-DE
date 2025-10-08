@@ -1,0 +1,42 @@
+version: 2
+models:
+  - name: customers_stg
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+  - name: products_stg
+    columns:
+      - name: product_id
+        tests: [not_null, unique]
+  - name: stores_stg
+    columns:
+      - name: store_id
+        tests: [not_null, unique]
+  - name: suppliers_stg
+    columns:
+      - name: supplier_id
+        tests: [not_null, unique]
+  - name: orders_lines_stg
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: product_id
+        tests: [not_null, unique]
+  - name: orders_header_stg
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests: [not_null, unique]
+  - name: sensors_stg
+    columns:
+      - name: store_id
+        tests: [not_null, unique]
+      - name: shelf_id
+        tests: [not_null, unique]
+  - name: shipments_stg
+    columns:
+      - name: shipment_id
+        tests: [not_null, unique]
+      - name: order_id
+        tests: [not_null, unique]

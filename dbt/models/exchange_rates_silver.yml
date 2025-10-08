@@ -1,0 +1,36 @@
+version: 2
+models:
+  - name: exchange_rates_silver
+    config:
+      contract:
+        enforced: true
+      description: "shipments table"
+    columns: 
+      - name: date
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: currency
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: rate_to_aud
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+
+   

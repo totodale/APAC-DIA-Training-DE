@@ -1,0 +1,50 @@
+version: 2
+models:
+  - name: suppliers_silver
+    config:
+      contract:
+        enforced: true
+      description: "suppliers table"
+    columns: 
+      - name: supplier_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null, unique]
+      - name: supplier_code
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: name
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: country_code
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: lead_time_days
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: preferred
+        data_type: boolean
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: varchar
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+   

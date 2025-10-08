@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: main
+    description: "DE assessment warehouse"
+    tables:
+      - name: customers
+      - name: products
+      - name: suppliers
+      - name: stores
+      - name: orders_lines
+      - name: orders_header
+      - name: sensors
+      - name: exchange_rates
+      - name: shipments
+      - name: returns
+

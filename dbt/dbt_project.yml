@@ -10,7 +10,7 @@ test-paths: ['tests']
 analysis-paths: ['analysis']
 macro-paths: ['macros']
 seed-paths: ['seeds']
-target-path: 'target'
+target-path: 'silver'
 clean-targets: ['target']
 
 models:

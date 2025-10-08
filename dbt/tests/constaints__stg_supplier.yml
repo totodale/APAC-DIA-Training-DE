@@ -1,0 +1,6 @@
+version: 2
+models:
+  - name: suppliers
+    columns:
+      - name: supplier_id
+        tests: [not_null, unique]

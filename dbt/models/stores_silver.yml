@@ -1,0 +1,70 @@
+version: 2
+models:
+  - name: stores_silver
+    config:
+      contract:
+        enforced: true
+      description: "stores table"
+    columns: 
+      - name: store_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null, unique]
+      - name: store_code
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: name
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: channel
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: region
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: state
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: latitude
+        data_type: double 
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: longitude
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: open_dt
+        data_type: date  
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: close_dt
+        data_type: date
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+   
