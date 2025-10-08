@@ -27,4 +27,3 @@ typed as (
     cast(ingestion_ts as datetime) as ingestion_ts
   from src
 )
-select * from typed

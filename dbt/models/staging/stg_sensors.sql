@@ -14,3 +14,4 @@ typed as (
   from src
 )
 select * from typed
+
