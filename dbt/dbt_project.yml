@@ -10,7 +10,7 @@ test-paths: ['tests']
 analysis-paths: ['analysis']
 macro-paths: ['macros']
 seed-paths: ['seeds']
-target-path: 'silver'
+target-path: 'target'
 clean-targets: ['target']
 
 models:
@@ -21,3 +21,4 @@ models:
     silver:
       +schema: silver
     gold:
+      +schema: gold

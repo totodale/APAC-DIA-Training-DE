@@ -14,5 +14,7 @@ select
     cast(open_dt as date) as open_dt,
     cast(close_dt as date) as close_dt,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts
+    cast(ingestion_ts as datetime) as ingestion_ts,
+    trim(src_filename) as src_filename,
+    trim(src_hash) as src_hash
 from {{ source('main','stores') }}

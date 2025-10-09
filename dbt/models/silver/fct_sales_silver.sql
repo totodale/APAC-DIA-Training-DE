@@ -18,6 +18,7 @@ e.unit_price as unit_price,
 e.line_number as line_total,
 e.line_discount_pct as discount_amount,
 e.tax_pct as tax_amount,
+a.ingestion_ts as ingestion_ts
 ((e.unit_price +(e.unit_price * e.tax_pct))) - (e.unit_price * e.line_discount_pct) as net_amount
 FROM {{ ref('customers_silver') }} AS a
 INNER JOIN  {{ ref('products_silver')}} AS b ON a.customer_id = b.product_id

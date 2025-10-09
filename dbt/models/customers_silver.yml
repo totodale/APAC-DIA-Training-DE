@@ -10,7 +10,12 @@ models:
         data_type: bigint
         constraints:
           - type: not_null
-        tests: [not_null, unique]
+        tests: 
+          - not_null
+          - unique
+          - relationships:
+              to: ref('orders_lines')
+              field: order_id
       - name: natural_key
         data_type: string
         constraints:
@@ -35,7 +40,10 @@ models:
         data_type: string
         constraints:
           - type: not_null
-        tests: [not_null]
+        tests: 
+          - not_null
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
       - name: phone
         data_type: string 
         constraints:
@@ -72,12 +80,20 @@ models:
         data_type: double
         constraints:
           - type: not_null
-        tests: [not_null]
+        tests: 
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -90
+              max_value: 90
       - name: longitude
         data_type: double
         constraints:
           - type: not_null
-        tests: [not_null]
+        tests: 
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -180
+              max_value: 180
       - name: birth_date
         data_type: date
         constraints:
@@ -100,6 +116,16 @@ models:
         tests: [not_null]
       - name: ingestion_ts
         data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_filename
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_hash
+        data_type: string
         constraints:
           - type: not_null
         tests: [not_null]

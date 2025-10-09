@@ -8,3 +8,4 @@ local_duckdb:
       extensions:
         - delta
         - parquet
+

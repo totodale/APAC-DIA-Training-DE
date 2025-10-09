@@ -9,5 +9,7 @@ select
     cast(delivered_at as datetime) as delivered_at,
     cast(ship_cost as bigint) as ship_cost,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts
+    cast(ingestion_ts as datetime) as ingestion_ts,
+    trim(src_filename) as src_filename,
+    trim(src_hash) as src_hash
 from {{ source('main','shipments') }}

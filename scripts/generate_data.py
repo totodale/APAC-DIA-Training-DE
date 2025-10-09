@@ -32,9 +32,7 @@ def main():
         f.write('customer_id,natural_key,first_name,last_name,email,phone,address_line1,address_line2,city,state_region,postcode,country_code,latitude,longitude,birth_date,join_ts,is_vip,gdpr_consent\n')
         for i in range(1, 80001):  # TODO raise to 80_000
             nk = 'CUST-' + rstr.rstr('A-Z0-9', 8)
-            first_name = fake.first_name()
-            last_name = fake.last_name()
-            email = fake.email() if random.random()>0.1 else 'bad_email'
+            email = fake.email() #if random.random()>0.1 else 'bad_email'
             lat = -44 + random.random()*10; lon = 112 + random.random()*40
             birth = date(1960,1,1) + timedelta(days=random.randint(0, 20000))
             join_ts = datetime(2024,1,1) + timedelta(days=random.randint(0, 400), seconds=random.randint(0, 86399))
@@ -110,7 +108,7 @@ def main():
     with orders_lines_path.open('w', encoding='utf-8') as f:
         f.write('order_id,line_number,product_id,qty,unit_price,line_discount_pct,tax_pct\n')
         for i in range(1, 4000001):  
-            line_number = fake.random_number()
+            line_number = i
             product_id = i #if random.random()>0.1 else 0
             qty = fake.numerify()
             unit_price = random.uniform(0,10000)

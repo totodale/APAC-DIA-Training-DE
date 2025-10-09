@@ -10,5 +10,7 @@ select
     cast(lead_time_days as bigint) as lead_time_days,
     cast(preferred as boolean) as preferred,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts
+    cast(ingestion_ts as datetime) as ingestion_ts,
+    trim(src_filename) as src_filename,
+    trim(src_hash) as src_hash
 from {{ source('main','suppliers') }}

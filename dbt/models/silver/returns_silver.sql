@@ -10,5 +10,7 @@ select
     cast(qty as bigint) as qty,
     trim(reason) as reason,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts
+    cast(ingestion_ts as datetime) as ingestion_ts,
+    trim(src_filename) as src_filename,
+    trim(src_hash) as src_hash
  from {{ source('main','returns') }}

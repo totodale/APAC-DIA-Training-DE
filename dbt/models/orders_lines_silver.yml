@@ -38,7 +38,11 @@ models:
         data_type: double
         constraints:
           - type: not_null
-        tests: [not_null]
+        tests: 
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
       - name: tax_pct
         data_type: double
         constraints:
@@ -51,6 +55,16 @@ models:
         tests: [not_null]
       - name: ingestion_ts
         data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_filename
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_hash
+        data_type: string
         constraints:
           - type: not_null
         tests: [not_null]

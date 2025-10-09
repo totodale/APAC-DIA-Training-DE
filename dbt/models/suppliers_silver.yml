@@ -46,5 +46,15 @@ models:
         constraints:
           - type: not_null
         tests: [not_null]
+      - name: src_filename
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_hash
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
 
    

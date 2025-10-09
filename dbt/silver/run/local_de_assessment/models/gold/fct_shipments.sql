@@ -4,7 +4,7 @@
     
 
     create  table
-      "warehouse"."main_gold"."fct_shipments__dbt_tmp"
+      "warehouse"."main"."fct_shipments__dbt_tmp"
   
     as (
       

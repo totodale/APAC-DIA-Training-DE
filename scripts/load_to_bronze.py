@@ -7,8 +7,15 @@ import pyarrow as pa
 import pyarrow.csv as pacsv
 import pyarrow.dataset as pads
 import pyarrow.parquet as pq
+import os, sys
+import random
 from datetime import datetime
-#from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+
+from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema, exchange_rates_schema, shipments_schema, returns_day1_schema
 
 try:
     from deltalake import write_deltalake
@@ -39,15 +46,20 @@ def init_manifest(conn):
 def ingestToTable(conn, tableName):
     fileName = f"data_raw/{tableName}.csv"
     defaultValue = datetime.now()
+    hash = random.getrandbits(128)
     conn.execute(f"CREATE OR REPLACE TABLE {tableName} AS SELECT * FROM read_csv('{fileName}')")
-    conn.execute(f"ALTER TABLE {tableName} ADD (ingestion_ts datetime DEFAULT '{defaultValue}, src_filename string DEFAULT '{fileName}')")
+    conn.execute(f"ALTER TABLE {tableName} ADD ingestion_ts datetime DEFAULT '{defaultValue}'")
+    conn.execute(f"ALTER TABLE {tableName} ADD src_filename string DEFAULT '{fileName}'")
+    conn.execute(f"ALTER TABLE {tableName} ADD src_hash string DEFAULT '{hash}'")
 
 def ingestToTableParquet(conn, tableName):
     fileName = f"data_raw/{tableName}.parquet"
     defaultValue = datetime.now()
+    hash = random.getrandbits(128)
     conn.execute(f"CREATE OR REPLACE TABLE {tableName} AS SELECT * FROM read_parquet('{fileName}')")
-    conn.execute(f"ALTER TABLE {tableName} ADD (ingestion_ts datetime DEFAULT '{defaultValue}, src_filename string DEFAULT '{fileName}')")
-
+    conn.execute(f"ALTER TABLE {tableName} ADD ingestion_ts datetime DEFAULT '{defaultValue}'")
+    conn.execute(f"ALTER TABLE {tableName} ADD src_filename string DEFAULT '{fileName}'")
+    conn.execute(f"ALTER TABLE {tableName} ADD src_hash string DEFAULT '{hash}'")
 
 def already_processed(conn, p): return conn.execute("SELECT 1 FROM manifest_processed_files WHERE src_path = ?", [str(p)]).fetchone() is not None
 def mark_processed(conn, p, n): conn.execute("INSERT OR REPLACE INTO manifest_processed_files VALUES (?, ?, ?)", [str(p), dt.datetime.utcnow(), n])
@@ -184,7 +196,7 @@ def load_shipments(raw_root, lake_root, conn):
     src = raw_root/'shipments.parquet'
     if not src.exists(): return
     if already_processed(conn, src): return
-    tbl = pq.read_table(src) #ReadOptions(encoding='utf-8')
+    tbl = pq.read_table(src) 
     tbl = tbl.cast(shipments_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
@@ -209,123 +221,6 @@ def load_returns(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'returns')
     mark_processed(conn, src, len(tbl))
-
-customers_schema = pa.schema([
-    pa.field("customer_id", pa.int64()),
-    pa.field("natural_key", pa.string()),
-    pa.field("first_name", pa.string()),
-    pa.field("last_name", pa.string()),
-    pa.field("email", pa.string()),
-    pa.field("phone", pa.string()),
-    pa.field("address_line1", pa.string()),
-    pa.field("address_line2", pa.string()),
-    pa.field("city", pa.string()),
-    pa.field("state_region", pa.string()),
-    pa.field("postcode", pa.string()),
-    pa.field("country_code", pa.string()),
-    pa.field("latitude", pa.float64()),
-    pa.field("longitude", pa.float64()),
-    pa.field("birth_date", pa.date32()),
-    pa.field("join_ts", pa.timestamp("us")),  # normalize TZ downstream
-    pa.field("is_vip", pa.bool_()),
-    pa.field("gdpr_consent", pa.bool_()),
-])
-
-products_schema = pa.schema([
-    pa.field("product_id", pa.int64()),
-    pa.field("sku", pa.string()),
-    pa.field("name", pa.string()),
-    pa.field("category", pa.string()),
-    pa.field("subcategory", pa.string()),
-    pa.field("current_price", pa.decimal128(12, 4)),     
-    pa.field("currency", pa.string()),
-    pa.field("is_discontinued", pa.bool_()),
-    pa.field("introduced_dt", pa.date32()),
-    pa.field("discontinued_dt", pa.date32()),
-])
-
-stores_schema = pa.schema([
-    pa.field("store_id", pa.int64()),
-    pa.field("store_code", pa.string()),
-    pa.field("name", pa.string()),
-    pa.field("channel", pa.string()),
-    pa.field("region", pa.string()),
-    pa.field("state", pa.string()),
-    pa.field("latitude", pa.float64()),     
-    pa.field("longitude", pa.float64()),    
-    pa.field("open_dt", pa.date32()),
-    pa.field("close_dt", pa.date32()),
-])
-
-suppliers_schema = pa.schema([
-    pa.field("supplier_id", pa.int64()),
-    pa.field("supplier_code", pa.string()),
-    pa.field("name", pa.string()),
-    pa.field("country_code", pa.string()),
-    pa.field("lead_time_days", pa.int32()),
-    pa.field("preferred", pa.bool_()),
-])
-
-orders_header_schema = pa.schema([
-    pa.field("order_id", pa.int64()),
-    pa.field("order_ts", pa.timestamp("us")),
-    pa.field("order_dt_local", pa.date32()),
-    pa.field("customer_id", pa.int64()),
-    pa.field("store_id", pa.int64()),
-    pa.field("channel", pa.string()),
-    pa.field("payment_method", pa.string()),
-    pa.field("coupon_code", pa.string()),
-    pa.field("shipping_fee", pa.decimal128(12, 2)),
-    pa.field("currency", pa.string()),
-])
-
-orders_lines_schema = pa.schema([
-    pa.field("order_id", pa.int64()),
-    pa.field("line_number", pa.int32()),
-    pa.field("product_id", pa.int64()),
-    pa.field("qty", pa.int32()),
-    pa.field("unit_price", pa.decimal128(12, 4)),
-    pa.field("line_discount_pct", pa.decimal128(5, 4)),
-    pa.field("tax_pct", pa.decimal128(5, 4)),
-])
-
-events_schema = pa.schema([
-    pa.field("json", pa.string()),
-])
-
-sensors_schema = pa.schema([
-    pa.field("sensor_ts", pa.timestamp("us")),
-    pa.field("store_id", pa.int64()),
-    pa.field("shelf_id", pa.string()),
-    pa.field("temperature_c", pa.decimal128(5, 2)),
-    pa.field("humidity_pct", pa.decimal128(5, 2)),
-    pa.field("battery_mv", pa.int32()),
-])
-
-exchange_rates_schema = pa.schema([
-    pa.field("date", pa.date32()),
-    pa.field("currency", pa.string()),
-    pa.field("rate_to_aud", pa.decimal128(18, 8)),
-])
-
-shipments_schema = pa.schema([
-    pa.field("shipment_id", pa.int64()),
-    pa.field("order_id", pa.int64()),
-    pa.field("carrier", pa.string()),
-    pa.field("shipped_at", pa.timestamp("us")),
-    pa.field("delivered_at", pa.timestamp("us")),
-    pa.field("ship_cost", pa.int64()), #decimal128(12, 2)
-])
-
-returns_day1_schema = pa.schema([
-    pa.field("return_id", pa.int64()),
-    pa.field("order_id", pa.int64()),
-    pa.field("product_id", pa.int64()),
-    pa.field("return_ts", pa.timestamp("us")),
-    pa.field("qty", pa.int32()),
-    pa.field("reason", pa.string()),
-])
-
 
 def main():
     args = parse_args()

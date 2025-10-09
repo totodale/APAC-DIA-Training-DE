@@ -22,5 +22,7 @@ select
     cast(join_ts as timestamp) as join_ts,
     cast(is_vip as boolean) as is_vip,
     cast(gdpr_consent as boolean) as gdpr_consent,
-    cast(ingestion_ts as datetime) as ingestion_ts
+    cast(ingestion_ts as datetime) as ingestion_ts,
+    trim(src_filename) as src_filename,
+    trim(src_hash) as src_hash
  from {{ source('main','customers') }}

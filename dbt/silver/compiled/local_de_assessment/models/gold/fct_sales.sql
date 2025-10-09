@@ -18,4 +18,4 @@ INNER JOIN  "warehouse"."main_silver"."stores_silver" AS c ON b.product_id = c.s
 INNER JOIN  "warehouse"."main_silver"."suppliers_silver" AS d ON c.store_id = d.supplier_id
 INNER JOIN  "warehouse"."main_silver"."orders_lines_silver" AS e ON e.product_id = b.product_id
 INNER JOIN  "warehouse"."main_silver"."returns_silver" AS f ON f.return_id = e.order_id
-INNER JOIN  "warehouse"."main_gold"."dim_date" as g ON g.date_id = a.customer_id
+INNER JOIN  "warehouse"."main"."dim_date" as g ON g.date_id = a.customer_id
