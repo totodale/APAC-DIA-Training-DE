@@ -38,6 +38,15 @@ def main():
             join_ts = datetime(2024,1,1) + timedelta(days=random.randint(0, 400), seconds=random.randint(0, 86399))
             f.write(f"{i},{nk},{fake.first_name()},{fake.last_name()},{email},{fake.phone_number().replace(',',' ')},{fake.street_address().replace(',',' ')},,{fake.city().replace(',',' ')},{fake.state_abbr()},{fake.postcode()},AU,{lat:.6f},{lon:.6f},{birth.isoformat()},{join_ts.isoformat()},{str(random.random()<0.15)},{str(random.random()>0.05)}\n")
 
+    product_categories = [
+        "Electronics",
+        "Apparel",
+        "Home Goods",
+        "Books",
+        "Beauty",
+        "Sports & Outdoors",
+        "Toys & Games",
+    ]
     #Products
     fake = Faker('en_AU')
     #mime = Person(')
@@ -46,8 +55,8 @@ def main():
         f.write('product_id,sku,name,category,subcategory,current_price,currency,is_discontinued,introduced_dt,discontinued_dt\n')
         for i in range(1, 25001):  # TODO raise to 80_000
             sku = 'SKU-' + rstr.rstr('[A-Z0-9]',8)
-            category = fake.administrative_unit()
-            sub_category = fake.administrative_unit()
+            category = fake.random_element(elements=product_categories)
+            sub_category = fake.random_element(elements=product_categories)
             current_price =  random.uniform(0,10000) #if random.random()>0.05 else 0.00
             currency = fake.currency_name()
             is_discontinued = fake.boolean()

@@ -28,7 +28,7 @@ products_schema = pa.schema([
     pa.field("name", pa.string()),
     pa.field("category", pa.string()),
     pa.field("subcategory", pa.string()),
-    pa.field("current_price", pa.decimal128(12, 4)),
+    pa.field("current_price", pa.decimal128(12, 4)),     
     pa.field("currency", pa.string()),
     pa.field("is_discontinued", pa.bool_()),
     pa.field("introduced_dt", pa.date32()),
@@ -42,8 +42,8 @@ stores_schema = pa.schema([
     pa.field("channel", pa.string()),
     pa.field("region", pa.string()),
     pa.field("state", pa.string()),
-    pa.field("latitude", pa.float64()),
-    pa.field("longitude", pa.float64()),
+    pa.field("latitude", pa.float64()),     
+    pa.field("longitude", pa.float64()),    
     pa.field("open_dt", pa.date32()),
     pa.field("close_dt", pa.date32()),
 ])
@@ -105,7 +105,7 @@ shipments_schema = pa.schema([
     pa.field("carrier", pa.string()),
     pa.field("shipped_at", pa.timestamp("us")),
     pa.field("delivered_at", pa.timestamp("us")),
-    pa.field("ship_cost", pa.decimal128(12, 2)),
+    pa.field("ship_cost", pa.int64()), #decimal128(12, 2)
 ])
 
 returns_day1_schema = pa.schema([

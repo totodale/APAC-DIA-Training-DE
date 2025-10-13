@@ -25,17 +25,26 @@ models:
         data_type: string  
         constraints:
           - type: not_null
-        tests: [not_null]
+        tests: 
+          - not_null
+          - accepted_values:        
+              arguments:     
+                values: ['Electronics','Apparel','Home Goods','Books','Beauty','Sports & Outdoors','Toys & Games']
       - name: subcategory
         data_type: varchar
         constraints:
           - type: not_null
-        tests: [not_null]
+        tests: 
+          - not_null
+          - accepted_values:        
+              arguments:     
+                values: ['Electronics','Apparel','Home Goods','Books','Beauty','Sports & Outdoors','Toys & Games']        
       - name: current_price
         data_type: double
         constraints:
           - type: not_null
         tests: [not_null]
+
       - name: currency
         data_type: string 
         constraints:

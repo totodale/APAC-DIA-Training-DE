@@ -15,7 +15,10 @@ stores_gold as (
         WHEN channel = 2 THEN 'Small'
     ELSE 'Invalid Size' END as store_size_category,
     CASE WHEN close_dt > '2020-12-31 00:00:00' THEN 'Open'
-    ELSE 'Closed' END AS operational_status
+    ELSE 'Closed' END AS operational_status,
+    ingestion_ts as ingestion_ts,
+    src_filename as src_filename,
+    src_hash as hash
     FROM silver_stores
 )
 SELECT * FROM stores_gold

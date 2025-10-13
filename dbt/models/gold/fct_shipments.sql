@@ -12,5 +12,7 @@ CASE WHEN CAST(delivery_days as BigInt) < 30 THEN 'On SLA'
      WHEN CAST(delivery_days as BigInt) >= 30 AND CAST(delivery_days as BigInt) < 60 THEN 'SLA at Risk'
     WHEN CAST(delivery_days as BigInt) > 60 THEN 'Failed SLA'
 ELSE 'invalid SLA' END as SLA_compliance,
-ingestion_ts as ingestion_ts
+ingestion_ts as ingestion_ts,
+src_filename as src_filename,
+src_hash as src_hash
 FROM {{ ref('shipments_silver')}}

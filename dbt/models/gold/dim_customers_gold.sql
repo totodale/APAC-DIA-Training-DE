@@ -38,7 +38,9 @@ customers_enhanced as (
             WHEN is_vip = FALSE THEN 'Regular Member'
         ELSE 'undefined'
         END as customer_segment,
-        ingestion_ts
+        ingestion_ts as ingestion_ts,
+        src_filename as src_filename,
+        src_hash as src_hash
     FROM silver_customers
 )
 SELECT * FROM customers_enhanced

@@ -38,7 +38,11 @@ models:
         data_type: string
         constraints:
           - type: not_null
-        tests: [not_null]
+        tests: 
+         - not_null
+         - accepted_values:        
+              arguments:     
+                values: ['Quality Issues','Reason Not Specified','Factory Defect','Not Satisfied']        
       - name: isDeleted
         data_type: string
         constraints:

@@ -11,7 +11,7 @@ select
     cast(line_discount_pct as double) as line_discount_pct,
     cast(tax_pct as double) as tax_pct,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts
+    cast(ingestion_ts as datetime) as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
 from {{ source('main','orders_lines') }}
