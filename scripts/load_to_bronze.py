@@ -39,30 +39,28 @@ def init_manifest(conn):
         CREATE OR REPLACE TABLE manifest_processed_files (
             src_path TEXT PRIMARY KEY,
             processed_at TIMESTAMP,
-            row_count BIGINT
+            row_count BIGINT,
+            reject_count BIGINT,
+            status TEXT
         )
     ''')
 
 def ingestToTable(conn, tableName):
     fileName = f"data_raw/{tableName}.csv"
     defaultValue = datetime.now()
-    hash = random.getrandbits(128)
     conn.execute(f"CREATE OR REPLACE TABLE {tableName} AS SELECT * FROM read_csv('{fileName}')")
     conn.execute(f"ALTER TABLE {tableName} ADD ingestion_ts datetime DEFAULT '{defaultValue}'")
     conn.execute(f"ALTER TABLE {tableName} ADD src_filename string DEFAULT '{fileName}'")
-    conn.execute(f"ALTER TABLE {tableName} ADD src_hash string DEFAULT '{hash}'")
 
 def ingestToTableParquet(conn, tableName):
     fileName = f"data_raw/{tableName}.parquet"
     defaultValue = datetime.now()
-    hash = random.getrandbits(128)
     conn.execute(f"CREATE OR REPLACE TABLE {tableName} AS SELECT * FROM read_parquet('{fileName}')")
     conn.execute(f"ALTER TABLE {tableName} ADD ingestion_ts datetime DEFAULT '{defaultValue}'")
     conn.execute(f"ALTER TABLE {tableName} ADD src_filename string DEFAULT '{fileName}'")
-    conn.execute(f"ALTER TABLE {tableName} ADD src_hash string DEFAULT '{hash}'")
 
 def already_processed(conn, p): return conn.execute("SELECT 1 FROM manifest_processed_files WHERE src_path = ?", [str(p)]).fetchone() is not None
-def mark_processed(conn, p, n): conn.execute("INSERT OR REPLACE INTO manifest_processed_files VALUES (?, ?, ?)", [str(p), dt.datetime.utcnow(), n])
+def mark_processed(conn, p, n): conn.execute("INSERT OR REPLACE INTO manifest_processed_files VALUES (?, ?, ?, ?, ?)", [str(p), dt.datetime.utcnow(), n, n, str(p)])
 
 def write_parquet_partitioned(table, base_path, partitioning=None):
     pads.write_dataset(table, base_dir=str(base_path), format='parquet', partitioning=partitioning, existing_data_behavior='overwrite_or_ignore')
@@ -79,7 +77,18 @@ def load_customers(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(customers_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/customers.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'customers'
     dl_base = lake_root/'bronze'/'delta'/'customers'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -94,7 +103,18 @@ def load_products(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(products_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/products.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'products'
     dl_base = lake_root/'bronze'/'delta'/'products'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -109,7 +129,18 @@ def load_stores(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(stores_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/stores.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'stores'
     dl_base = lake_root/'bronze'/'delta'/'stores'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -124,7 +155,18 @@ def load_suppliers(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(suppliers_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/suppliers.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'suppliers'
     dl_base = lake_root/'bronze'/'delta'/'suppliers'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -139,7 +181,18 @@ def load_orders_header(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(orders_header_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/orders_header.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'orders_header'
     dl_base = lake_root/'bronze'/'delta'/'orders_header'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -154,7 +207,18 @@ def load_orders_lines(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(orders_lines_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/orders_lines.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'orders_lines'
     dl_base = lake_root/'bronze'/'delta'/'orders_lines'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -169,7 +233,18 @@ def load_sensors(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(sensors_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/sensors.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'sensors'
     dl_base = lake_root/'bronze'/'delta'/'sensors'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -184,7 +259,18 @@ def load_exchange_rates(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(exchange_rates_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/exchange_rates.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'exchange_rates'
     dl_base = lake_root/'bronze'/'delta'/'exchange_rates'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -199,7 +285,18 @@ def load_shipments(raw_root, lake_root, conn):
     tbl = pq.read_table(src) 
     tbl = tbl.cast(shipments_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/shipments.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'shipements'
     dl_base = lake_root/'bronze'/'delta'/'shipments'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
@@ -214,7 +311,18 @@ def load_returns(raw_root, lake_root, conn):
     tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
     tbl = tbl.cast(returns_day1_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/returns.csv"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
     pq_base = lake_root/'bronze'/'parquet'/'returns'
     dl_base = lake_root/'bronze'/'delta'/'returns'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)

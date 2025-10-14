@@ -19,7 +19,7 @@ customers_schema = pa.schema([
     pa.field("birth_date", pa.date32()),
     pa.field("join_ts", pa.timestamp("us")),  # normalize TZ downstream
     pa.field("is_vip", pa.bool_()),
-    pa.field("gdpr_consent", pa.bool_()),
+    pa.field("gdpr_consent", pa.bool_()),  
 ])
 
 products_schema = pa.schema([

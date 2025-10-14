@@ -7,5 +7,5 @@
     check_cols=['temperature_c','humidity_pct','battery_mv']
   )
 }}
-select * from {{ source('main','sensors') }}
+select * from {{ ref('stg_sensors') }}
 {% endsnapshot %}

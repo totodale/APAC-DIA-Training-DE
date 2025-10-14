@@ -7,5 +7,5 @@
     check_cols=['supplier_code','name','country_code','lead_time_days']
   )
 }}
-select * from {{ source('main','suppliers') }}
+select * from {{ ref('stg_suppliers') }}
 {% endsnapshot %}

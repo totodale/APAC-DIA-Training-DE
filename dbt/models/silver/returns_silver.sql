@@ -13,4 +13,4 @@ select
     cast(ingestion_ts as datetime) as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
- from {{ source('main','returns') }}
+from {{ ref('stg_returns') }}

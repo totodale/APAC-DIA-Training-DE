@@ -7,5 +7,5 @@
     check_cols=['line_number','qty','unit_price','line_discount_pct','tax_pct']
   )
 }}
-select * from {{ source('main','orders_lines') }}
+select * from {{ ref('stg_orders_lines') }}
 {% endsnapshot %}

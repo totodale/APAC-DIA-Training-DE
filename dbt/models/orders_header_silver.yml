@@ -29,7 +29,7 @@ models:
           - type: unique
         tests: [not_null, unique]
       - name: channel
-        data_type: bigint
+        data_type: string
         constraints:
           - type: not_null
         tests: [not_null]
@@ -43,7 +43,7 @@ models:
         constraints:
           - type: not_null
         tests: [not_null]
-      - name: channel_1
+      - name: shipping_fee
         data_type: bigint
         constraints:
           - type: not_null

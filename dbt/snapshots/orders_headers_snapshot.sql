@@ -7,5 +7,5 @@
     check_cols=['channel','payment_method','coupon_code','shipping_fee','currency']
   )
 }}
-select * from {{ source('main','orders_header') }}
+select * from {{ ref('stg_orders_header') }}
 {% endsnapshot %}

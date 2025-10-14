@@ -7,5 +7,5 @@
     check_cols=['store_code','name','channel','region','state']
   )
 }}
-select * from {{ source('main','stores') }}
+select * from {{ ref('stg_stores') }}
 {% endsnapshot %}

@@ -7,5 +7,5 @@
     check_cols=['name','category','subcategory','current_price','currency','is_discontinued']
   )
 }}
-select * from {{ source('main','products') }}
+select * from {{ ref('stg_products') }}
 {% endsnapshot %}

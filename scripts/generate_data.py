@@ -10,6 +10,10 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import xlsxwriter
 import json
+import random
+import uuid
+from datetime import datetime, timedelta
+
 
 def parse_args():
     ap = argparse.ArgumentParser()
@@ -38,31 +42,32 @@ def main():
             join_ts = datetime(2024,1,1) + timedelta(days=random.randint(0, 400), seconds=random.randint(0, 86399))
             f.write(f"{i},{nk},{fake.first_name()},{fake.last_name()},{email},{fake.phone_number().replace(',',' ')},{fake.street_address().replace(',',' ')},,{fake.city().replace(',',' ')},{fake.state_abbr()},{fake.postcode()},AU,{lat:.6f},{lon:.6f},{birth.isoformat()},{join_ts.isoformat()},{str(random.random()<0.15)},{str(random.random()>0.05)}\n")
 
-    product_categories = [
-        "Electronics",
-        "Apparel",
-        "Home Goods",
-        "Books",
-        "Beauty",
-        "Sports & Outdoors",
-        "Toys & Games",
-    ]
+    
     #Products
     fake = Faker('en_AU')
-    #mime = Person(')
     products_path = out/'products.csv'
+    invalid_count_products = 0
+    invalid_count_products_error = ''
+    product_categories = ["Electronics","Apparel","Home Goods","Books","Beauty","Sports & Outdoors","Toys & Games"]
     with products_path.open('w', encoding='utf-8') as f:
         f.write('product_id,sku,name,category,subcategory,current_price,currency,is_discontinued,introduced_dt,discontinued_dt\n')
         for i in range(1, 25001):  # TODO raise to 80_000
             sku = 'SKU-' + rstr.rstr('[A-Z0-9]',8)
             category = fake.random_element(elements=product_categories)
             sub_category = fake.random_element(elements=product_categories)
-            current_price =  random.uniform(0,10000) #if random.random()>0.05 else 0.00
+            current_price =  random.uniform(0,10000) 
+            if random.random() > 0.05:
+                current_price = random.uniform(0, 10000)
+            else:
+                current_price = -9999
+                invalid_count_products = invalid_count_products + 1
+                invalid_count_products_error = 'Invalid Current Price for Products'
             currency = fake.currency_name()
             is_discontinued = fake.boolean()
             introduced_dt = fake.date_between_dates(date_start=datetime(2000,1,1), date_end=datetime(2025,12,31))
             discontinued_dt = fake.date_between(start_date = introduced_dt, end_date = introduced_dt + timedelta(days=365)) #if random.random()>0.1 else '1900-1-1'
             f.write(f"{i},{sku},{fake.name()},{category},{sub_category},{current_price},{currency},{is_discontinued},{introduced_dt},{discontinued_dt}\n")
+    
     
      #Stores
     fake = Faker('en_AU')
@@ -93,10 +98,13 @@ def main():
             lead_time_days = fake.numerify()
             preferred = fake.boolean()
             f.write(f"{i},{supplier_code},{name},{country_code},{lead_time_days},{preferred}\n")
-    
+      
     #Orders Header
     fake = Faker('en_AU')
     orders_header_path = out/'orders_header.csv'
+    order_channels = ["Website - Direct","Mobile App","Amazon Marketplace","eBay","In-Store POS","Shopify Store","Wholesale - B2B","Social Media - Instagram","Phone Order"]
+    payment_method_fake = ["Visa","MasterCard","Amex","PayPal","Apple Pay","Cash"]
+    coupon_code_fake = ["Save 20%","Free Shipping","Buy 1Take 1","Earn 500 Points"]
     with orders_header_path.open('w', encoding='utf-8') as f:
         f.write('order_id,order_ts,order_dt_local,customer_id,store_id,channel,payment_method,coupon_code,shipping_fee,currency\n')
         for i in range(1, 1000001):  
@@ -104,9 +112,9 @@ def main():
             order_dt_local = fake.date_between(start_date = order_ts, end_date = order_ts)
             customer_id = i #if random.random()>0.1 else 0
             store_id =  i #if random.random()>0.1 else 0
-            channel = fake.area_code()
-            payment_method = fake.currency_code()
-            coupon_code = fake.currency_code()
+            channel = fake.random_element(elements=order_channels)
+            payment_method = fake.random_element(elements=payment_method_fake)
+            coupon_code = fake.random_element(elements=coupon_code_fake)
             shipping_fee = random.uniform(0,10000)
             currency = fake.currency_name()
             f.write(f"{i},{order_ts},{order_dt_local},{customer_id},{store_id},{channel},{payment_method},{coupon_code},{shipping_fee},{currency}\n")
@@ -125,26 +133,50 @@ def main():
             tax_pct = random.uniform(0.00,0.20)
             f.write(f"{i},{line_number},{product_id},{qty},{unit_price},{line_discount_pct},{tax_pct}\n")
     
-    #Events (json format)
+
+    """  #events json
+    TARGET_ROWS = 2000000
+    ANOMALY_RATE = 0.0005  # 0.05%
+    ANOMALY_COUNT = int(TARGET_ROWS * ANOMALY_RATE) # 1000
+
+    # 1. Generate 1000 random row indices for anomalies
+    anomaly_indices = random.sample(range(TARGET_ROWS), ANOMALY_COUNT)
+    malformed_indices = anomaly_indices[:ANOMALY_COUNT // 2]  # ~500
+    missing_field_indices = anomaly_indices[ANOMALY_COUNT // 2:] # ~500
+
+    # 2. Loop and generate events
+    for i in range(TARGET_ROWS):
     
-   # fake = Faker('en_AU')
-   # headers ={
-   #         "event_id": "",
-   #         "event_ts": "",
-   #         "event_type": "",
-   #         "user_id": "",
-   #         "session_id": ""
-   #         }
-   # events_path = out/'events.json'
-   # with events_path.open('w', encoding='utf-8') as f:
-   #     for i in range(1, 1001):  
-   #         headers['event_id'] = "udonis"
-   #         headers['event_ts'] = "udonis"
-   #         headers['event_type'] = "udonis"
-   #         headers['user_id'] = "udonis"
-   #         headers['session_id'] = "udonis"
-   #     f.write(json.dump(headers,f,indent=4))
+    # Generate event data
+        event_ts = (datetime.now() - timedelta(hours=random.randint(0, 168))).isoformat() + 'Z'
+        event = {
+        "event_id": str(uuid.uuid4()),
+        "event_ts": event_ts,
+        "event_type": random.choice(["page_view", "search", "add_to_cart", "purchase"]),
+        "user_id": random.randint(10000, 99999),
+        "session_id": str(uuid.uuid4()),
+        "payload": {"data": f"content-{random.randint(1, 100)}"}
+        }
     
+    # 3. Apply Anomalies
+    if i in missing_field_indices:
+        # Remove a random required field
+        field_to_remove = random.choice(list(event.keys())[:-1]) # Exclude payload
+        del event[field_to_remove]
+        json_line = json.dumps(event)
+        
+    elif i in malformed_indices:
+        # Create malformed JSON (e.g., cut off the end)
+        json_line_full = json.dumps(event)
+        json_line = json_line_full[:-random.randint(1, 5)] # Remove 1-5 chars (often the closing '}')
+        
+    else:
+        # Standard valid line
+        json_line = json.dumps(event)
+    
+    # 4. Output the line (e.g., write to a file)
+    print(json_line) 
+"""
     #Sensors
     fake = Faker('en_AU')
     sensors_path = out/'sensors.csv'
@@ -154,8 +186,8 @@ def main():
             sensor_ts = fake.date_between_dates(date_start=datetime(2000,1,1), date_end=datetime(2025,12,31)) #if random.random()>0.1 else datetime(1999,1,1)
             store_id = i
             shelf_id = i
-            temperature_c =  random.uniform(10,40) if random.random()>0.05 else 0
-            humidity_pct = random.uniform(0,100) if random.random()>0.05 else 0
+            temperature_c =  random.uniform(10,40) if random.random()>0.05 else -9999
+            humidity_pct = random.uniform(0,100) if random.random()>0.05 else -9999
             battery_mv = fake.numerify()
             f.write(f"{sensor_ts},{store_id},{shelf_id},{temperature_c},{humidity_pct},{battery_mv}\n")
  
@@ -169,7 +201,6 @@ def main():
             currency = fake.currency_name()
             rate_to_aud = random.uniform(0,10000)
             f.write(f"{date_var},{currency},{rate_to_aud}\n")
-
 
     # Shipments parquet sample
     tbl = pa.table({
@@ -197,5 +228,6 @@ def main():
             f.write(f"{return_id},{order_id},{product_id},{return_ts},{qty},{reason}\n")
 
     print(f"✅ Sample raw written to {out}. Expand to required volumes per /docs.")
+    print(f"✅ Invalid Count for Products: {invalid_count_products}, Reason: {invalid_count_products_error}")
 if __name__ == '__main__':
     main()

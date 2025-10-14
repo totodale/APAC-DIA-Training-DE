@@ -7,13 +7,13 @@ select
     cast(order_ts as datetime) as order_ts,
     cast(order_dt_local as date) as date,
     cast(customer_id as bigint) as customer_id,
-    cast(channel as bigint) as channel,
+    trim(channel) as channel,
     trim(payment_method) as payment_method,
     trim(coupon_code) as coupon_code,
-    cast(shipping_fee as bigint) as channel,
+    cast(shipping_fee as bigint) as shipping_fee,
     trim(currency) as currency,
     'FALSE' as isDeleted,
     cast(ingestion_ts as datetime) as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
-from {{ source('main','orders_header') }}
+from {{ ref('stg_orders_header') }}
