@@ -14,3 +14,6 @@ select
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
 from {{ ref('stg_sensors') }}
+where temperature_c != -9999 and
+humidity_pct != -9999 and 
+sensor_ts is not null

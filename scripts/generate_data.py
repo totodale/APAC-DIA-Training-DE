@@ -31,28 +31,44 @@ def main():
     # Minimal sample generation (expand to full volumes per docs)
     #Customers
     fake = Faker('en_AU')
-    invalid_count_customers = 0
+    invalid_count_customers_duplicate_natural_key = 0
+    invalid_count_customers_bad_email = 0
+    invalid_count_customers_null_address = 0
+    invalid_count_customers_total = 0
     customers_path = out/'customers.csv'
     with customers_path.open('w', encoding='utf-8') as f:
         f.write('customer_id,natural_key,first_name,last_name,email,phone,address_line1,address_line2,city,state_region,postcode,country_code,latitude,longitude,birth_date,join_ts,is_vip,gdpr_consent\n')
         for i in range(1, 80001):  # TODO raise to 80_000
             nk = 'CUST-' + rstr.rstr('A-Z0-9', 8)
+            if random.random()>0.02:
+                nk = 'CUST-' + rstr.rstr('A-Z0-9', 8) 
+            else:
+                nk = 'CUST-' + rstr.rstr('A-Z0-9', 8) 
+                invalid_count_customers_duplicate_natural_key = invalid_count_customers_duplicate_natural_key + 1
             email = fake.email() 
-            if random.random()>0.1:
+            if random.random()>0.03:
                  email = fake.email() 
             else:
                 email = 'bad_email'
-                invalid_count_customers = invalid_count_customers + 1
+                invalid_count_customers_bad_email = invalid_count_customers_bad_email + 1
             lat = -44 + random.random()*10; lon = 112 + random.random()*40
+            streetAddress = fake.street_address().replace(',',' ')
+            if random.random()>0.03:
+                streetAddress = fake.street_address().replace(',',' ') 
+            else:
+                streetAddress = 'null'
+                invalid_count_customers_null_address = invalid_count_customers_null_address + 1
             birth = date(1960,1,1) + timedelta(days=random.randint(0, 20000))
             join_ts = datetime(2024,1,1) + timedelta(days=random.randint(0, 400), seconds=random.randint(0, 86399))
-            f.write(f"{i},{nk},{fake.first_name()},{fake.last_name()},{email},{fake.phone_number().replace(',',' ')},{fake.street_address().replace(',',' ')},,{fake.city().replace(',',' ')},{fake.state_abbr()},{fake.postcode()},AU,{lat:.6f},{lon:.6f},{birth.isoformat()},{join_ts.isoformat()},{str(random.random()<0.15)},{str(random.random()>0.05)}\n")
-
+            f.write(f"{i},{nk},{fake.first_name()},{fake.last_name()},{email},{fake.phone_number().replace(',',' ')},{streetAddress},,{fake.city().replace(',',' ')},{fake.state_abbr()},{fake.postcode()},AU,{lat:.6f},{lon:.6f},{birth.isoformat()},{join_ts.isoformat()},{str(random.random()<0.15)},{str(random.random()>0.05)}\n")
+    invalid_count_customers_total = invalid_count_customers_bad_email + invalid_count_customers_duplicate_natural_key + invalid_count_customers_null_address
     
     #Products
     fake = Faker('en_AU')
     products_path = out/'products.csv'
-    invalid_count_products = 0
+    invalid_count_products_invalid_unit_price = 0
+    invalid_count_products_null_discontinued_date = 0
+    invalid_count_products_total = 0
     product_categories = ["Electronics","Apparel","Home Goods","Books","Beauty","Sports & Outdoors","Toys & Games"]
     with products_path.open('w', encoding='utf-8') as f:
         f.write('product_id,sku,name,category,subcategory,current_price,currency,is_discontinued,introduced_dt,discontinued_dt\n')
@@ -65,13 +81,18 @@ def main():
                 current_price = random.uniform(0, 10000)
             else:
                 current_price = -9999
-                invalid_count_products = invalid_count_products + 1
+                invalid_count_products_invalid_unit_price = invalid_count_products_invalid_unit_price + 1
             currency = fake.currency_name()
             is_discontinued = fake.boolean()
             introduced_dt = fake.date_between_dates(date_start=datetime(2000,1,1), date_end=datetime(2025,12,31))
-            discontinued_dt = fake.date_between(start_date = introduced_dt, end_date = introduced_dt + timedelta(days=365)) #if random.random()>0.1 else '1900-1-1'
+            discontinued_dt = fake.date_between(start_date = introduced_dt, end_date = introduced_dt + timedelta(days=365))
+            if random.random() > 0.04:
+                discontinued_dt = fake.date_between(start_date = introduced_dt, end_date = introduced_dt + timedelta(days=365))
+            else:
+                discontinued_dt = 'NULL'
+                invalid_count_products_null_discontinued_date = invalid_count_products_null_discontinued_date+ 1
             f.write(f"{i},{sku},{fake.name()},{category},{sub_category},{current_price},{currency},{is_discontinued},{introduced_dt},{discontinued_dt}\n")
-    
+    invalid_count_products_total = invalid_count_products_invalid_unit_price + invalid_count_products_null_discontinued_date
     
      #Stores
     fake = Faker('en_AU')
@@ -157,6 +178,7 @@ def main():
             currency = fake.currency_name()
             f.write(f"{order_id},{order_ts},{order_dt_local},{customer_id},{store_id},{channel},{payment_method},{coupon_code},{shipping_fee},{currency}\n")
     invalid_count_orders_header_total = invalid_count_orders_header_duplicate_order_id + invalid_count_orders_header_customer_id
+    
     #Orders Lines
     fake = Faker('en_AU')
     orders_lines_path = out/'orders_lines.csv'
@@ -295,8 +317,11 @@ def main():
     rejects_path = out/'rejects_count.csv'
     with rejects_path.open('w', encoding='utf-8') as f:
         f.write('Reason,Count,Table\n')
-        f.write(f"Invalid Email Format,{invalid_count_customers},customers\n")
-        f.write(f"Invalid Current Price,{invalid_count_products},products\n")
+        f.write(f"Invalid Email Format,{invalid_count_customers_bad_email},customers\n")
+        f.write(f"Duplicate Natural Key,{invalid_count_customers_duplicate_natural_key},customers\n")
+        f.write(f"Null Street Address,{invalid_count_customers_null_address},customers\n")
+        f.write(f"Invalid Current Price,{invalid_count_orders_lines_unit_price},products\n")
+        f.write(f"Null Discontinued Date,{invalid_count_products_null_discontinued_date},products\n")
         f.write(f"Invalid Latitude Value,{invalid_count_stores_latitude},stores\n")
         f.write(f"Invalid Longitude Value,{invalid_count_stores_longitude},stores\n")
         f.write(f"Duplicate Store Code Value,{invalid_count_stores_duplicate_store_code},stores\n")
@@ -311,8 +336,8 @@ def main():
     rejects_total_path = out/'rejects_count_total.csv'
     with rejects_total_path.open('w', encoding='utf-8') as f:
         f.write('Table,Total Reject Count\n')
-        f.write(f"customers,{invalid_count_customers}\n")
-        f.write(f"products,{invalid_count_products}\n")
+        f.write(f"customers,{invalid_count_customers_total}\n")
+        f.write(f"products,{invalid_count_products_total}\n")
         f.write(f"stores,{invalid_count_stores_total}\n")
         f.write(f"orders_header,{invalid_count_orders_header_total}\n")
         f.write(f"orders_lines,{invalid_count_orders_lines_total}\n")
@@ -320,9 +345,14 @@ def main():
 
 
     print(f"✅ Sample raw written to {out}. Expand to required volumes per /docs.\n")
-    print(f"✅ Invalid Count for Customers: {invalid_count_customers} | Reason: Invalid Email Format\n")
+    print(f"✅ Invalid Count for Bad Email Customers: {invalid_count_customers_bad_email} | Reason: Invalid Email Format")
+    print(f"✅ Invalid Count for Duplicate Natural Key Customers: {invalid_count_stores_duplicate_store_code} | Reason: Duplicate Natural Key")
+    print(f"✅ Invalid Count for Null Address Customers: {invalid_count_customers_null_address} | Reason: Null Street Address")
+    print(f"✅ Invalid Count Total for Customers: {invalid_count_customers_total}\n")
     
-    print(f"✅ Invalid Count for Products: {invalid_count_products} | Reason: Invalid Current Price\n")
+    print(f"✅ Invalid Count for Invalid Current Price: {invalid_count_products_invalid_unit_price} | Reason: Invalid Current Price")
+    print(f"✅ Invalid Count for Null Discontinued Date: {invalid_count_products_null_discontinued_date} | Reason: Null Discontinued Date")
+    print(f"✅ Invalid Count Total for Products: {invalid_count_products_total}\n")
     
     print(f"✅ Invalid Count for Latitude Errors Stores: {invalid_count_stores_latitude} | Reason: Invalid Latitude Value")
     print(f"✅ Invalid Count for Longitude Errors Stores: {invalid_count_stores_longitude} | Reason: Invalid Longitude Value")

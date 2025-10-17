@@ -25,7 +25,6 @@ models:
       - name: customer_id
         data_type: bigint
         constraints:
-          - type: not_null
           - type: unique
         tests: [not_null, unique]
       - name: channel

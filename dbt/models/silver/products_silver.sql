@@ -18,3 +18,4 @@ select
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
 from {{ ref('stg_products') }}
+where discontinued_dt is not null and current_price != -9999

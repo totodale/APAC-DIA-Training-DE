@@ -47,11 +47,11 @@ def init_manifest(conn):
 
 def ingestRejectsCount(conn):
     fileName = f"data_raw/rejects_count.csv"
-    conn.execute(f"CREATE OR REPLACE TABLE rejects_count AS SELECT * FROM read_csv('{fileName}')")
+    conn.execute(f"CREATE OR REPLACE TABLE rejects_count_per_table AS SELECT * FROM read_csv('{fileName}')")
 
 def ingestRejectsCountTotal(conn):
     fileName = f"data_raw/rejects_count_total.csv"
-    conn.execute(f"CREATE OR REPLACE TABLE rejects_count_total AS SELECT * FROM read_csv('{fileName}')")
+    conn.execute(f"CREATE OR REPLACE TABLE rejects_count_total_per_table AS SELECT * FROM read_csv('{fileName}')")
 
 def ingestToTable(conn, tableName):
     fileName = f"data_raw/{tableName}.csv"

@@ -26,3 +26,8 @@ select
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
  from {{ ref('stg_customers') }}
+ where address_line1 != 'null' and email != 'bad_email'
+ and natural_key 
+ in (select natural_key from {{ ref('stg_customers') }} 
+ group by natural_key 
+ having count(natural_key) = 1)
