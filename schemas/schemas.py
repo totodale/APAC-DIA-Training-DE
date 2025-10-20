@@ -116,3 +116,16 @@ returns_day1_schema = pa.schema([
     pa.field("qty", pa.int32()),
     pa.field("reason", pa.string()),
 ])
+
+rejects_count_schema = pa.schema([
+    pa.field("reason", pa.string()),
+    pa.field("count", pa.int64()),
+    pa.field("table_name", pa.string()),
+])
+
+rejects_count_total_schema = pa.schema([
+    pa.field("table_name", pa.string()),
+    pa.field("total_reject_count", pa.int64()),
+
+])
+

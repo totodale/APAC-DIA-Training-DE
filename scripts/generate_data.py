@@ -316,7 +316,7 @@ def main():
     #rejects
     rejects_path = out/'rejects_count.csv'
     with rejects_path.open('w', encoding='utf-8') as f:
-        f.write('Reason,Count,Table\n')
+        f.write('reason,count,table_name\n')
         f.write(f"Invalid Email Format,{invalid_count_customers_bad_email},customers\n")
         f.write(f"Duplicate Natural Key,{invalid_count_customers_duplicate_natural_key},customers\n")
         f.write(f"Null Street Address,{invalid_count_customers_null_address},customers\n")
@@ -335,7 +335,7 @@ def main():
     #rejects total count
     rejects_total_path = out/'rejects_count_total.csv'
     with rejects_total_path.open('w', encoding='utf-8') as f:
-        f.write('Table,Total Reject Count\n')
+        f.write('table_name,total_reject_count\n')
         f.write(f"customers,{invalid_count_customers_total}\n")
         f.write(f"products,{invalid_count_products_total}\n")
         f.write(f"stores,{invalid_count_stores_total}\n")

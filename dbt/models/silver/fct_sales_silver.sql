@@ -17,7 +17,7 @@ e.unit_price as unit_price,
 e.line_number as line_total,
 e.line_discount_pct as discount_amount,
 e.tax_pct as tax_amount,
-b.ingestion_ts as ingestion_ts,
+a.ingestion_ts as ingestion_ts_a,
 ((e.unit_price +(e.unit_price * e.tax_pct))) - (e.unit_price * e.line_discount_pct) as net_amount
 FROM {{ ref('customers_silver') }} AS a
 INNER JOIN  {{ ref('products_silver')}} AS b ON a.customer_id = b.product_id
@@ -28,5 +28,5 @@ INNER JOIN  {{ ref('returns_silver')}} AS f ON f.return_id = e.order_id
 INNER JOIN  {{ ref('dim_date')}} as g ON g.date_id = a.customer_id
 
 {% if is_incremental() %}
-  WHERE a.ingestion_ts > (SELECT MAX(ingestion_ts) FROM {{ this }})
+  WHERE ingestion_ts_a > (SELECT MAX(ingestion_ts_a) FROM {{ this }})
 {% endif %}

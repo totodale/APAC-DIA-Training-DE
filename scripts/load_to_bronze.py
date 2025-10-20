@@ -15,7 +15,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema, exchange_rates_schema, shipments_schema, returns_day1_schema
+from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema, exchange_rates_schema, shipments_schema, returns_day1_schema, rejects_count_schema, rejects_count_total_schema
 
 try:
     from deltalake import write_deltalake
@@ -68,7 +68,7 @@ def ingestToTableParquet(conn, tableName):
     conn.execute(f"ALTER TABLE {tableName} ADD src_filename string DEFAULT '{fileName}'")
 
 def already_processed(conn, p): return conn.execute("SELECT 1 FROM manifest_processed_files WHERE src_path = ?", [str(p)]).fetchone() is not None
-def mark_processed(conn, p, n): conn.execute("INSERT OR REPLACE INTO manifest_processed_files VALUES (?, ?, ?, ?, ?)", [str(p), dt.datetime.utcnow(), n, n, str(p)])
+def mark_processed(conn, p, n): conn.execute("INSERT OR REPLACE INTO manifest_processed_files VALUES (?, ?, ?, ?, ?)", [str(p), dt.datetime.utcnow(), n,0,''])
 
 def write_parquet_partitioned(table, base_path, partitioning=None):
     pads.write_dataset(table, base_dir=str(base_path), format='parquet', partitioning=partitioning, existing_data_behavior='overwrite_or_ignore')
@@ -338,6 +338,33 @@ def load_returns(raw_root, lake_root, conn):
     ingestToTable(conn,'returns')
     mark_processed(conn, src, len(tbl))
 
+def load_rejects_count(raw_root, lake_root, conn):
+    src = raw_root/'rejects_count.csv'
+    if not src.exists(): return
+    if already_processed(conn, src): return
+    tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
+    tbl = tbl.cast(rejects_count_schema, safe=False)
+    pq_base = lake_root/'_rejects'/'parquet'/'rejects_count'
+    dl_base = lake_root/'_rejects'/'delta'/'rejects_count'
+    write_parquet_partitioned(tbl, pq_base, partitioning=None)
+    write_delta(tbl, dl_base, mode='append')
+    ingestToTable(conn,'rejects_count')
+    mark_processed(conn, src, len(tbl))
+
+def load_rejects_count_total(raw_root, lake_root, conn):
+    src = raw_root/'rejects_count_total.csv'
+    if not src.exists(): return
+    if already_processed(conn, src): return
+    tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
+    tbl = tbl.cast(rejects_count_total_schema, safe=False)
+    pq_base = lake_root/'_rejects'/'parquet'/'rejects_count_total'
+    dl_base = lake_root/'_rejects'/'delta'/'rejects_count_total'
+    write_parquet_partitioned(tbl, pq_base, partitioning=None)
+    write_delta(tbl, dl_base, mode='append')
+    ingestToTable(conn,'rejects_count_total')
+    mark_processed(conn, src, len(tbl))
+
+
 def main():
     args = parse_args()
     raw_root = pathlib.Path(args.raw)
@@ -348,9 +375,6 @@ def main():
     conn.execute("INSTALL delta; LOAD delta;")
     init_manifest(conn)
     
-    ingestRejectsCount(conn)
-    ingestRejectsCountTotal(conn)
-
     load_customers(raw_root, lake_root, conn)
     load_products(raw_root, lake_root, conn)
     load_stores(raw_root, lake_root, conn)
@@ -361,6 +385,8 @@ def main():
     load_exchange_rates(raw_root, lake_root, conn)
     load_shipments(raw_root, lake_root, conn)
     load_returns(raw_root, lake_root, conn)
+    load_rejects_count(raw_root, lake_root, conn)
+    load_rejects_count_total(raw_root, lake_root, conn)
 
     print("✅ Bronze load completed for implemented loaders (extend for all tables).")
 
