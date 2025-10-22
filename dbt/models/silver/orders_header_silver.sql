@@ -7,6 +7,7 @@ select
     cast(order_ts as datetime) as order_ts,
     cast(order_dt_local as date) as date,
     cast(customer_id as bigint) as customer_id,
+    cast(store_id as bigint) as store_id,
     trim(channel) as channel,
     trim(payment_method) as payment_method,
     trim(coupon_code) as coupon_code,

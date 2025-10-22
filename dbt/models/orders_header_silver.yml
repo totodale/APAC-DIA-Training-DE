@@ -27,6 +27,11 @@ models:
         constraints:
           - type: unique
         tests: [not_null, unique]
+      - name: store_id
+        data_type: bigint
+        constraints:
+          - type: unique
+        tests: [not_null, unique]
       - name: channel
         data_type: string
         constraints:

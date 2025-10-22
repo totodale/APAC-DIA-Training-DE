@@ -1,32 +1,37 @@
 {{
   config(
     materialized='incremental',
-    unique_key='customer_id',
+    unique_key='order_id',
     on_schema_change='merge'
   )
 }}
-SELECT 
+SELECT
+a.order_id as order_id,
 a.customer_id as customer_id,
+a.store_id as store_id,
+a.ingestion_ts as ingestion_ts,
+b.line_number as line_number,
 b.product_id as product_id,
-c.store_id as store_id,
-d.supplier_id as supplier_id,
-f.return_id as return_id,
-g.date_id as date_id,
-e.qty as qty,
-e.unit_price as unit_price,
-e.line_number as line_total,
-e.line_discount_pct as discount_amount,
-e.tax_pct as tax_amount,
-a.ingestion_ts as ingestion_ts_a,
-((e.unit_price +(e.unit_price * e.tax_pct))) - (e.unit_price * e.line_discount_pct) as net_amount
-FROM {{ ref('customers_silver') }} AS a
-INNER JOIN  {{ ref('products_silver')}} AS b ON a.customer_id = b.product_id
-INNER JOIN  {{ ref('stores_silver')}} AS c ON b.product_id = c.store_id
-INNER JOIN  {{ ref('suppliers_silver')}} AS d ON c.store_id = d.supplier_id
-INNER JOIN  {{ ref('orders_lines_silver')}} AS e ON e.product_id = b.product_id
-INNER JOIN  {{ ref('returns_silver')}} AS f ON f.return_id = e.order_id
-INNER JOIN  {{ ref('dim_date')}} as g ON g.date_id = a.customer_id
-
+b.qty as qty,
+b.unit_price as unit_price,
+b.line_discount_pct as line_discount_pct,
+b.tax_pct as tax_pct,
+(b.unit_price * b.line_discount_pct) as discount_amount,
+(b.unit_price * b.tax_pct) as tax_amount,
+(b.qty * b.unit_price) as gross_amount_total,
+((b.unit_price +(b.unit_price * b.tax_pct)) - (b.unit_price * b.line_discount_pct)) as net_amount_per_product,
+((b.unit_price +(b.unit_price * b.tax_pct)) - (b.unit_price * b.line_discount_pct)) * b.qty as net_amount_total
+from {{ ref('stg_orders_header') }} as a 
+inner join {{ ref('stg_orders_lines') }} as b on a.order_id = b.order_id
+inner join {{ ref('stg_customers') }} as c on a.customer_id = c.customer_id
+inner join {{ ref('stg_products') }} as d on b.product_id = d.product_id
+inner join {{ ref('stg_returns') }} as e on a.order_id = e.order_id
+inner join {{ ref('stg_shipments') }} as f on a.order_id = f.order_id
+where b.unit_price != 0 and
+discount_amount != 0 and 
+tax_amount != 0 and 
+net_amount_per_product != 0 and
+net_amount_total != 0 and
 {% if is_incremental() %}
-  WHERE ingestion_ts_a > (SELECT MAX(ingestion_ts_a) FROM {{ this }})
+a.ingestion_ts > (SELECT MAX(ingestion_ts) FROM {{ this }})
 {% endif %}
