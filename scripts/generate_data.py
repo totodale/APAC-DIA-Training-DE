@@ -69,11 +69,13 @@ def main():
     invalid_count_products_invalid_unit_price = 0
     invalid_count_products_null_discontinued_date = 0
     invalid_count_products_total = 0
+    product_name = ["Shirts","Skin Care","Makeup","Vitamins and Supplements","Pants","Dresses","Motor Vehicle Parts","Activewear","Coats and Jackets","Sneakers and Boots","Arts and Crafting Materials","Shampoo and Soap","Underwear","Bedding","Cycling"]
     product_categories = ["Electronics","Apparel","Home Goods","Books","Beauty","Sports & Outdoors","Toys & Games"]
     with products_path.open('w', encoding='utf-8') as f:
         f.write('product_id,sku,name,category,subcategory,current_price,currency,is_discontinued,introduced_dt,discontinued_dt\n')
         for i in range(1, 25001):  # TODO raise to 80_000
             sku = 'SKU-' + rstr.rstr('[A-Z0-9]',8)
+            name = fake.random_element(elements=product_name)
             category = fake.random_element(elements=product_categories)
             sub_category = fake.random_element(elements=product_categories)
             current_price =  random.uniform(0,10000) 
@@ -91,7 +93,7 @@ def main():
             else:
                 discontinued_dt = 'NULL'
                 invalid_count_products_null_discontinued_date = invalid_count_products_null_discontinued_date+ 1
-            f.write(f"{i},{sku},{fake.name()},{category},{sub_category},{current_price},{currency},{is_discontinued},{introduced_dt},{discontinued_dt}\n")
+            f.write(f"{i},{sku},{name},{category},{sub_category},{current_price},{currency},{is_discontinued},{introduced_dt},{discontinued_dt}\n")
     invalid_count_products_total = invalid_count_products_invalid_unit_price + invalid_count_products_null_discontinued_date
     
      #Stores
@@ -101,6 +103,7 @@ def main():
     invalid_count_stores_longitude = 0
     invalid_count_stores_duplicate_store_code = 0
     invalid_count_stores_total = 0
+    store_name = ["Zenith Finds","The Curiosity Corner","Echo & Ember","Whimsy & Wonder","Tech Trendy Mall","Cyber Cart Central","Digit Ease Emporium","Luxe Layers Beauty","Snappy Ts","The Artisan Atelier"]
     with stores_path.open('w', encoding='utf-8') as f:
         f.write('store_id,store_code,name,channel,region,state,latitude,longitude,open_dt,close_dt\n')
         for i in range(1, 5001):  
@@ -110,7 +113,7 @@ def main():
             else:
                 store_code = i + i
                 invalid_count_stores_duplicate_store_code = invalid_count_stores_duplicate_store_code + 1
-            name = fake.name()
+            name = fake.random_element(elements=store_name)
             channel = fake.area_code()
             region = fake.administrative_unit()
             state = fake.state()
@@ -134,11 +137,12 @@ def main():
      #Suppliers
     fake = Faker('en_AU')
     suppliers_path = out/'suppliers.csv'
+    supplier_name = ["Syncee","Alibaba","Zendrop","Trendsi","Megagoods","DropCommerce"]
     with suppliers_path.open('w', encoding='utf-8') as f:
         f.write('supplier_id,supplier_code,name,country_code,lead_time_days,preferred\n')
         for i in range(1, 8001):  
             supplier_code = fake.area_code()
-            name = fake.name()
+            name = fake.random_element(elements=supplier_name)
             country_code = fake.country_code()
             lead_time_days = fake.numerify()
             preferred = fake.boolean()

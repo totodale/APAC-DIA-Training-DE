@@ -15,9 +15,9 @@ select
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
 from {{ ref('stg_orders_lines') }}
-where unit_price != 0 and
-product_id != 9999
-and product_id 
-in (select product_id from {{ ref('stg_orders_lines') }} 
-group by product_id
-having count(product_id) = 1)
+where unit_price = 0 or
+product_id = -9999
+--and product_id 
+--in (select product_id from {{ ref('stg_orders_lines') }} 
+--group by product_id
+--having count(product_id) = 1)

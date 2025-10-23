@@ -1,0 +1,61 @@
+version: 2
+models:
+  - name: sensors_silver_rejects
+    config:
+      contract:
+        enforced: true
+      description: "sensors rejects table"
+    columns: 
+      - name: sensor_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: store_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: shelf_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: temperature_c
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: humidity_pct
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: battery_mv
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_filename
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_hash
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+
+   

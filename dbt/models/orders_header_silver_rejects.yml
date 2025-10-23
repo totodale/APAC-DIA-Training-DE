@@ -1,0 +1,80 @@
+version: 2
+models:
+  - name: orders_header_silver_rejects
+    config:
+      contract:
+        enforced: true
+      description: "orders header rejects table"
+    columns: 
+      - name: order_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: order_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: date
+        data_type: date
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: customer_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: store_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: channel
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: payment_method
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: coupon_code
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: shipping_fee
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: currency
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: isDeleted
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_filename
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_hash
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+   
