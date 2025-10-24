@@ -2,6 +2,8 @@
     materialized='table',
     contract={'enforced': true}
 )}}
+With getUniqueNaturalKey as 
+(
 select
     cast(customer_id as bigint) as customer_id,
     trim(natural_key) as natural_key,
@@ -24,10 +26,11 @@ select
     cast(gdpr_consent as boolean) as gdpr_consent,
     cast(ingestion_ts as datetime) as ingestion_ts,
     trim(src_filename) as src_filename,
-    trim(src_hash) as src_hash
+    trim(src_hash) as src_hash,
+    row_number() over (partition by natural_key order by natural_key) as row_number_natural_key
  from {{ ref('stg_customers') }}
- where address_line1 = 'null' or email = 'bad_email'
- --and natural_key 
- --in (select natural_key from {{ ref('stg_customers') }} 
- --group by natural_key 
- --having count(natural_key) != 1)
+)
+select * from getUniqueNaturalKey
+where address_line1 = 'null' or email = 'bad_email' or row_number_natural_key > 1
+
+

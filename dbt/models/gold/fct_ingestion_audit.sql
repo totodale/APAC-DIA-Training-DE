@@ -20,7 +20,11 @@ SELECT
     a.table_name,
     a.row_count,
     COALESCE(b.total_reject_count,0) as total_reject_count,
-    COALESCE(a.row_count - b.total_reject_count,a.row_count) as total_valid_rows
+    COALESCE(a.row_count - b.total_reject_count,a.row_count) as total_valid_rows,
+    COALESCE(c.file_size_in_bytes,0) as file_size_in_bytes,
+    COALESCE(c.processing_time_in_seconds,0) as processing_time_in_seconds
 FROM manifest_data AS a
 LEFT JOIN {{ ref('rejects_count_total_silver') }} AS b
     ON a.table_name = b.table_name
+LEFT JOIN {{ source('main','pipeline_metrics') }} AS c
+    ON a.table_name = c.table_name

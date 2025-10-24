@@ -15,4 +15,5 @@ sources:
       - name: shipments
       - name: returns
       - name: manifest_processed_files
+      - name: pipeline_metrics
 

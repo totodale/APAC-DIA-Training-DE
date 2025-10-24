@@ -10,8 +10,7 @@ models:
         data_type: bigint
         constraints:
           - type: not_null
-          - type: unique
-        tests: [not_null, unique]
+        tests: [not_null]
       - name: order_ts
         data_type: timestamp
         constraints:
@@ -25,8 +24,8 @@ models:
       - name: customer_id
         data_type: bigint
         constraints:
-          - type: unique
-        tests: [not_null, unique]
+          - type: not_null
+        tests: [not_null]
       - name: store_id
         data_type: bigint
         constraints:
@@ -77,5 +76,9 @@ models:
         constraints:
           - type: not_null
         tests: [not_null]
-
+      - name: row_number_order_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
    

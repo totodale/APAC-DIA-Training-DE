@@ -76,5 +76,10 @@ models:
         constraints:
           - type: not_null
         tests: [not_null]
+      - name: row_number_order_id
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
 
    

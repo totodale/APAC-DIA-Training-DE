@@ -9,6 +9,7 @@ import pyarrow.dataset as pads
 import pyarrow.parquet as pq
 import os, sys
 import random
+import time
 from datetime import datetime
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,6 +45,9 @@ def init_manifest(conn):
             status TEXT
         )
     ''')
+    
+def initTableMetrics(conn):
+    conn.execute(f"CREATE OR REPLACE TABLE pipeline_metrics (table_name varchar(255),file_size_in_bytes bigint,processing_time_in_seconds double)")
 
 def ingestRejectsCount(conn):
     fileName = f"data_raw/rejects_count.csv"
@@ -79,6 +83,7 @@ def write_delta(table, base_path, mode='append', partition_by=None, merge_schema
     write_deltalake(str(base_path), table, mode=mode, partition_by=partition_by or [])
 
 def load_customers(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'customers.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -103,8 +108,14 @@ def load_customers(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'customers')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_customers = raw_root/'customers.csv'
+    file_size_bytes_customers = os.path.getsize(src_customers)
+    conn.execute(f"INSERT INTO pipeline_metrics values('customers',{file_size_bytes_customers},{processing_time})")
 
 def load_products(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'products.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -129,8 +140,14 @@ def load_products(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'products')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_products = raw_root/'products.csv'
+    file_size_bytes_products = os.path.getsize(src_products)
+    conn.execute(f"INSERT INTO pipeline_metrics values('products',{file_size_bytes_products},{processing_time})")
 
 def load_stores(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'stores.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -155,8 +172,14 @@ def load_stores(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'stores')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_stores = raw_root/'stores.csv'
+    file_size_bytes_stores = os.path.getsize(src_stores)
+    conn.execute(f"INSERT INTO pipeline_metrics values('stores',{file_size_bytes_stores},{processing_time})")
 
 def load_suppliers(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'suppliers.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -181,8 +204,14 @@ def load_suppliers(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'suppliers')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_suppliers = raw_root/'suppliers.csv'
+    file_size_bytes_suppliers = os.path.getsize(src_suppliers)
+    conn.execute(f"INSERT INTO pipeline_metrics values('suppliers',{file_size_bytes_suppliers},{processing_time})")
 
 def load_orders_header(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'orders_header.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -207,8 +236,14 @@ def load_orders_header(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'orders_header')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_orders_header = raw_root/'orders_header.csv'
+    file_size_bytes_orders_header = os.path.getsize(src_orders_header)
+    conn.execute(f"INSERT INTO pipeline_metrics values('orders_header',{file_size_bytes_orders_header},{processing_time})")
 
 def load_orders_lines(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'orders_lines.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -233,8 +268,14 @@ def load_orders_lines(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'orders_lines')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_orders_lines = raw_root/'orders_lines.csv'
+    file_size_bytes_orders_lines = os.path.getsize(src_orders_lines)
+    conn.execute(f"INSERT INTO pipeline_metrics values('orders_lines',{file_size_bytes_orders_lines},{processing_time})")
 
 def load_sensors(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'sensors.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -259,8 +300,14 @@ def load_sensors(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'sensors')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_sensors = raw_root/'sensors.csv'
+    file_size_bytes_sensors = os.path.getsize(src_sensors)
+    conn.execute(f"INSERT INTO pipeline_metrics values('sensors',{file_size_bytes_sensors},{processing_time})")
 
 def load_exchange_rates(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'exchange_rates.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -285,8 +332,15 @@ def load_exchange_rates(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'exchange_rates')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_exchange_rates = raw_root/'exchange_rates.csv'
+    file_size_bytes_exchange_rates = os.path.getsize(src_exchange_rates)
+    conn.execute(f"INSERT INTO pipeline_metrics values('exchange_rates',{file_size_bytes_exchange_rates},{processing_time})")
+
     
 def load_shipments(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'shipments.parquet'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -311,8 +365,14 @@ def load_shipments(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTableParquet(conn,'shipments')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_shipments = raw_root/'shipments.parquet'
+    file_size_bytes_shipments = os.path.getsize(src_shipments)
+    conn.execute(f"INSERT INTO pipeline_metrics values('shipments',{file_size_bytes_shipments},{processing_time})")
 
 def load_returns(raw_root, lake_root, conn):
+    start_time = time.time()
     src = raw_root/'returns.csv'
     if not src.exists(): return
     if already_processed(conn, src): return
@@ -337,6 +397,11 @@ def load_returns(raw_root, lake_root, conn):
     write_delta(tbl, dl_base, mode='append')
     ingestToTable(conn,'returns')
     mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_returns = raw_root/'returns.csv'
+    file_size_bytes_returns = os.path.getsize(src_returns)
+    conn.execute(f"INSERT INTO pipeline_metrics values('returns',{file_size_bytes_returns},{processing_time})")
 
 def load_rejects_count(raw_root, lake_root, conn):
     src = raw_root/'rejects_count.csv'
@@ -374,6 +439,7 @@ def main():
     conn = duckdb.connect(args.manifest)
     conn.execute("INSTALL delta; LOAD delta;")
     init_manifest(conn)
+    initTableMetrics(conn)
     
     load_customers(raw_root, lake_root, conn)
     load_products(raw_root, lake_root, conn)
@@ -388,7 +454,43 @@ def main():
     load_rejects_count(raw_root, lake_root, conn)
     load_rejects_count_total(raw_root, lake_root, conn)
 
-    print("✅ Bronze load completed for implemented loaders (extend for all tables).")
+    print("✅ Bronze load completed for implemented loaders (extend for all tables).\n")
+    
+    src_customers = raw_root/'customers.csv'
+    file_size_bytes_customers = os.path.getsize(src_customers)
+    print(f"customers.csv file size in bytes: {file_size_bytes_customers}")
+    
+    src_products = raw_root/'products.csv'
+    file_size_bytes_products = os.path.getsize(src_products)
+    print(f"products.csv file size in bytes: {file_size_bytes_products}")
+    
+    src_sensors = raw_root/'sensors.csv'
+    file_size_bytes_sensors = os.path.getsize(src_sensors)
+    print(f"sensors.csv file size in bytes: {file_size_bytes_sensors}")
+    
+    src_stores = raw_root/'stores.csv'
+    file_size_bytes_stores = os.path.getsize(src_stores)
+    print(f"stores.csv file size in bytes: {file_size_bytes_stores}")
 
+    src_suppliers = raw_root/'suppliers.csv'
+    file_size_bytes_suppliers = os.path.getsize(src_suppliers)
+    print(f"suppliers.csv file size in bytes: {file_size_bytes_suppliers}")
+
+    src_orders_header = raw_root/'orders_header.csv'
+    file_size_bytes_orders_header = os.path.getsize(src_orders_header)
+    print(f"orders_header.csv file size in bytes: {file_size_bytes_orders_header}")
+
+    src_orders_lines = raw_root/'orders_lines.csv'
+    file_size_bytes_orders_lines = os.path.getsize(src_orders_lines)
+    print(f"orders_lines.csv file size in bytes: {file_size_bytes_orders_lines}")
+
+    src_exchange_rates = raw_root/'exchange_rates.csv'
+    file_size_bytes_exchange_rates = os.path.getsize(src_exchange_rates)
+    print(f"exchange_rates.csv file size in bytes: {file_size_bytes_exchange_rates}")
+
+    src_shipments = raw_root/'shipments.parquet'
+    file_size_bytes_shipments = os.path.getsize(src_shipments)
+    print(f"shipments.parquet file size in bytes: {file_size_bytes_shipments}")
+    
 if __name__ == '__main__':
     main()

@@ -2,6 +2,8 @@
     materialized='table',
     contract={'enforced': true}
 )}}
+with getUniqueOrderID as 
+(
 select
     cast(order_id as bigint) as order_id,
     cast(order_ts as datetime) as order_ts,
@@ -16,14 +18,10 @@ select
     'FALSE' as isDeleted,
     cast(ingestion_ts as datetime) as ingestion_ts,
     trim(src_filename) as src_filename,
-    trim(src_hash) as src_hash
+    trim(src_hash) as src_hash,
+    row_number() over (partition by order_id order by order_id) as row_number_order_id
 from {{ ref('stg_orders_header') }}
-where customer_id != 9999 and
-customer_id
-in (select customer_id from {{ ref('stg_orders_header') }} 
-group by customer_id
-having count(customer_id) = 1) and
-order_id
-in (select order_id from {{ ref('stg_orders_header') }} 
-group by order_id
-having count(order_id) = 1)
+)
+select * from getUniqueOrderID where customer_id != -9999 
+or
+row_number_order_id = 1

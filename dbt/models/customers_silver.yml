@@ -129,5 +129,10 @@ models:
         constraints:
           - type: not_null
         tests: [not_null]
+      - name: row_number_natural_key
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
 
    

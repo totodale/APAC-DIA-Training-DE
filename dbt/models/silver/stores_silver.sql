@@ -2,6 +2,8 @@
     materialized='table',
     contract={'enforced': true}
 )}}
+with getUniqueStoreCode as 
+(
 select
     cast(store_id as bigint) as store_id,
     trim(store_code) as store_code,
@@ -16,11 +18,11 @@ select
     'FALSE' as isDeleted,
     cast(ingestion_ts as datetime) as ingestion_ts,
     trim(src_filename) as src_filename,
-    trim(src_hash) as src_hash
+    trim(src_hash) as src_hash,
+    row_number() over(partition by store_code order by store_code) as row_number_store_code
 from {{ ref('stg_stores') }}
-where latitude != -9999 and 
-longitude != -9999 and
-store_code 
-in (select store_code from {{ ref('stg_stores') }} 
-group by store_code
-having count(store_code) = 1)
+)
+select * from getUniqueStoreCode
+where latitude != -9999 or 
+longitude != -9999 or
+row_number_store_code = 1
