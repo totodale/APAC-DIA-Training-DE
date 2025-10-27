@@ -23,6 +23,6 @@ select
 from {{ ref('stg_stores') }}
 )
 select * from getUniqueStoreCode
-where latitude != -9999 or 
-longitude != -9999 or
+where latitude != -9999 and
+longitude != -9999 and
 row_number_store_code = 1

@@ -20,6 +20,7 @@ joined_data AS (
     a.ingestion_ts as ingestion_ts,
     b.line_number as line_number,
     b.product_id as product_id,
+    row_number() over(order by a.customer_id) as date_id,
     b.qty as qty,
     b.unit_price as unit_price,
     b.line_discount_pct as line_discount_pct,
@@ -39,9 +40,9 @@ joined_data AS (
     discount_amount != 0 and 
     tax_amount != 0 and 
     net_amount_per_product != 0 and
-    net_amount_total != 0 and
-    {% if is_incremental() %}
-    a.ingestion_ts > (SELECT MAX(ingestion_ts) FROM {{ this }})
-    {% endif %}
+    net_amount_total != 0 --and
+    --{% if is_incremental() %}
+    --a.ingestion_ts > (SELECT MAX(ingestion_ts) FROM {{ this }})
+    --{% endif %}
 )
 SELECT * FROM joined_data

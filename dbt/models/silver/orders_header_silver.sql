@@ -23,5 +23,5 @@ select
 from {{ ref('stg_orders_header') }}
 )
 select * from getUniqueOrderID where customer_id != -9999 
-or
+and
 row_number_order_id = 1
