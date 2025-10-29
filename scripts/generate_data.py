@@ -66,7 +66,7 @@ def main():
     #Products
     fake = Faker('en_AU')
     products_path = out/'products.csv'
-    invalid_count_products_invalid_unit_price = 0
+    invalid_count_products_invalid_current_price = 0
     invalid_count_products_null_discontinued_date = 0
     invalid_count_products_total = 0
     product_name = ["Shirts","Skin Care","Makeup","Vitamins and Supplements","Pants","Dresses","Motor Vehicle Parts","Activewear","Coats and Jackets","Sneakers and Boots","Arts and Crafting Materials","Shampoo and Soap","Underwear","Bedding","Cycling"]
@@ -83,7 +83,7 @@ def main():
                 current_price = random.uniform(0, 10000)
             else:
                 current_price = -9999
-                invalid_count_products_invalid_unit_price = invalid_count_products_invalid_unit_price + 1
+                invalid_count_products_invalid_current_price = invalid_count_products_invalid_current_price + 1
             currency = fake.currency_name()
             is_discontinued = fake.boolean()
             introduced_dt = fake.date_between_dates(date_start=datetime(2000,1,1), date_end=datetime(2025,12,31))
@@ -94,7 +94,7 @@ def main():
                 discontinued_dt = 'NULL'
                 invalid_count_products_null_discontinued_date = invalid_count_products_null_discontinued_date+ 1
             f.write(f"{i},{sku},{name},{category},{sub_category},{current_price},{currency},{is_discontinued},{introduced_dt},{discontinued_dt}\n")
-    invalid_count_products_total = invalid_count_products_invalid_unit_price + invalid_count_products_null_discontinued_date
+    invalid_count_products_total = invalid_count_products_invalid_current_price + invalid_count_products_null_discontinued_date
     
      #Stores
     fake = Faker('en_AU')
@@ -210,50 +210,55 @@ def main():
             tax_pct = random.uniform(0.00,0.20)
             f.write(f"{i},{line_number},{product_id},{qty},{unit_price},{line_discount_pct},{tax_pct}\n")
     invalid_count_orders_lines_total = invalid_count_orders_lines_product_id + invalid_count_orders_lines_unit_price
-
-    """  #events json
-    TARGET_ROWS = 2000000
-    ANOMALY_RATE = 0.0005  # 0.05%
-    ANOMALY_COUNT = int(TARGET_ROWS * ANOMALY_RATE) # 1000
-
-    # 1. Generate 1000 random row indices for anomalies
-    anomaly_indices = random.sample(range(TARGET_ROWS), ANOMALY_COUNT)
-    malformed_indices = anomaly_indices[:ANOMALY_COUNT // 2]  # ~500
-    missing_field_indices = anomaly_indices[ANOMALY_COUNT // 2:] # ~500
-
-    # 2. Loop and generate events
-    for i in range(TARGET_ROWS):
-     i
-    # Generate event data
-        event_ts = (datetime.now() - timedelta(hours=random.randint(0, 168))).isoformat() + 'Z'
-        event = {
-        "event_id": str(uuid.uuid4()),
-        "event_ts": event_ts,
-        "event_type": random.choice(["page_view", "search", "add_to_cart", "purchase"]),
-        "user_id": random.randint(10000, 99999),
-        "session_id": str(uuid.uuid4()),
-        "payload": {"data": f"content-{random.randint(1, 100)}"}
-        }
-    
-    # 3. Apply Anomalies
-    if i in missing_field_indices:
-        # Remove a random required field
-        field_to_remove = random.choice(list(event.keys())[:-1]) # Exclude payload
-        del event[field_to_remove]
-        json_line = json.dumps(event)
-        
-    elif i in malformed_indices:
-        # Create malformed JSON (e.g., cut off the end)
-        json_line_full = json.dumps(event)
-        json_line = json_line_full[:-random.randint(1, 5)] # Remove 1-5 chars (often the closing '}')
-        
-    else:
-        # Standard valid line
-        json_line = json.dumps(event)
-    
-    # 4. Output the line (e.g., write to a file)
-    print(json_line) 
-"""
+    """
+# Generate all events and group by date
+    for i in range(1, num_events + 1):
+        if i % progress_interval == 0:
+            pct = (i / num_events) * 100
+            print(f"[events] Progress: {i:,}/{num_events:,} ({pct:.0f}%)")
+        # Assign event to a day
+            day_offset = i % days_span
+            event_date = (start_datetime + timedelta(days=day_offset)).date().isoformat()
+            # Build the event JSON
+            envelope = {
+                "event_id": f"evt-{i}",
+                "event_ts": iso(start_datetime + timedelta(days=day_offset, seconds=(i * 23) % 86400)),
+                "event_type": random.choice(["page_view", "add_to_cart", "purchase", "login", "logout"]),
+                "user_id": random.randint(1, self.sizes["customers"]) if random.random() > 0.01 else None,
+                "session_id": f"ses-{random.randint(1, 10_000_000)}",
+            }
+            payload = {
+                "details": {
+                    "path": f"/{self.fake.slug()}",
+                    "meta": {"x": random.randint(0, 100)}
+                }
+            }
+            full_event = {"envelope": envelope, "payload": payload}
+            # Sometimes write malformed JSON
+            if random.random() < malformed_rate:
+                if random.random() < 0.5:
+                    json_str = json.dumps(full_event)[:-3]  # Truncate
+                else:
+                    json_str = json.dumps({"payload": payload})  # Missing envelope
+                if random.random() < 0.01:  # Log only 1% to avoid spam
+                    self.log_anomaly("events", "malformed_json", {"index": i})
+            else:
+                json_str = json.dumps(full_event)
+            # Add to buffer for this date
+            event_buffers[event_date].append(json_str)
+        # Now write all buffers to files
+        print(f"[events] Writing {len(event_buffers)} date partitions to disk...")
+        for event_date, json_lines in event_buffers.items():
+            # Create partition directory
+            partition_dir = output_base / f"event_dt={event_date}"
+            ensure_dir(partition_dir)
+            # This ensures ONE file per date partition
+            file_path = partition_dir / "events.jsonl"
+            # Write to file (all events for this date in one file)
+            with file_path.open("w", encoding="utf-8") as f:
+                for line in json_lines:
+                    f.write(line + "\n")
+    """
     #Sensors
     fake = Faker('en_AU')
     sensors_path = out/'sensors.csv'
@@ -324,7 +329,7 @@ def main():
         f.write(f"Invalid Email Format,{invalid_count_customers_bad_email},customers\n")
         f.write(f"Duplicate Natural Key,{invalid_count_customers_duplicate_natural_key},customers\n")
         f.write(f"Null Street Address,{invalid_count_customers_null_address},customers\n")
-        f.write(f"Invalid Current Price,{invalid_count_orders_lines_unit_price},products\n")
+        f.write(f"Invalid Current Price,{invalid_count_products_invalid_current_price},products\n")
         f.write(f"Null Discontinued Date,{invalid_count_products_null_discontinued_date},products\n")
         f.write(f"Invalid Latitude Value,{invalid_count_stores_latitude},stores\n")
         f.write(f"Invalid Longitude Value,{invalid_count_stores_longitude},stores\n")
@@ -354,7 +359,7 @@ def main():
     print(f"✅ Invalid Count for Null Address Customers: {invalid_count_customers_null_address} | Reason: Null Street Address")
     print(f"✅ Invalid Count Total for Customers: {invalid_count_customers_total}\n")
     
-    print(f"✅ Invalid Count for Invalid Current Price: {invalid_count_products_invalid_unit_price} | Reason: Invalid Current Price")
+    print(f"✅ Invalid Count for Invalid Current Price: {invalid_count_products_invalid_current_price} | Reason: Invalid Current Price")
     print(f"✅ Invalid Count for Null Discontinued Date: {invalid_count_products_null_discontinued_date} | Reason: Null Discontinued Date")
     print(f"✅ Invalid Count Total for Products: {invalid_count_products_total}\n")
     

@@ -40,9 +40,9 @@ joined_data AS (
     discount_amount != 0 and 
     tax_amount != 0 and 
     net_amount_per_product != 0 and
-    net_amount_total != 0 --and
-    --{% if is_incremental() %}
-    --a.ingestion_ts > (SELECT MAX(ingestion_ts) FROM {{ this }})
-    --{% endif %}
+    net_amount_total != 0 and
+    {% if is_incremental() %}
+    a.ingestion_ts > (SELECT MAX(ingestion_ts) FROM {{ this }})
+    {% endif %}
 )
 SELECT * FROM joined_data

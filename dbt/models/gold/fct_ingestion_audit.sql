@@ -28,3 +28,4 @@ LEFT JOIN {{ ref('rejects_count_total_silver') }} AS b
     ON a.table_name = b.table_name
 LEFT JOIN {{ source('main','pipeline_metrics') }} AS c
     ON a.table_name = c.table_name
+WHERE c.table_name not in ('rejects_count','rejects_counts_total')
