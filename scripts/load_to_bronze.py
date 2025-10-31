@@ -7,6 +7,8 @@ import pyarrow as pa
 import pyarrow.csv as pacsv
 import pyarrow.dataset as pads
 import pyarrow.parquet as pq
+import pandas as pd
+import openpyxl
 import os, sys
 import random
 import time
@@ -308,10 +310,11 @@ def load_sensors(raw_root, lake_root, conn):
 
 def load_exchange_rates(raw_root, lake_root, conn):
     start_time = time.time()
-    src = raw_root/'exchange_rates.csv'
+    src = raw_root/'exchange_rates.xlsx'
     if not src.exists(): return
     if already_processed(conn, src): return
-    tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
+    tbl = pd.read_excel(src, sheet_name="Sheet1", engine="openpyxl")
+    tbl = pa.Table.from_pandas(tbl, preserve_index=False)
     tbl = tbl.cast(exchange_rates_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
     fileName = "data_raw/exchange_rates.csv"
@@ -334,7 +337,7 @@ def load_exchange_rates(raw_root, lake_root, conn):
     mark_processed(conn, src, len(tbl))
     end_time = time.time()  
     processing_time = end_time - start_time
-    src_exchange_rates = raw_root/'exchange_rates.csv'
+    src_exchange_rates = raw_root/'exchange_rates.xlsx'
     file_size_bytes_exchange_rates = os.path.getsize(src_exchange_rates)
     conn.execute(f"INSERT INTO pipeline_metrics values('exchange_rates',{file_size_bytes_exchange_rates},{processing_time})")
 

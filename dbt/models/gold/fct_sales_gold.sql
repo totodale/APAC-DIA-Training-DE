@@ -21,15 +21,15 @@ joined_data AS (
     b.line_number as line_number,
     b.product_id as product_id,
     row_number() over(order by a.customer_id) as date_id,
-    b.qty as qty,
-    b.unit_price as unit_price,
-    b.line_discount_pct as line_discount_pct,
-    b.tax_pct as tax_pct,
-    (b.unit_price * b.line_discount_pct) as discount_amount,
-    (b.unit_price * b.tax_pct) as tax_amount,
-    (b.qty * b.unit_price) as gross_amount_total,
-    ((b.unit_price +(b.unit_price * b.tax_pct)) - (b.unit_price * b.line_discount_pct)) as net_amount_per_product,
-    ((b.unit_price +(b.unit_price * b.tax_pct)) - (b.unit_price * b.line_discount_pct)) * b.qty as net_amount_total
+    COALESCE(b.qty,0) as qty,
+    COALESCE(b.unit_price,0) as unit_price,
+    COALESCE(b.line_discount_pct,0) as line_discount_pct,
+    COALESCE(b.tax_pct,0) as tax_pct,
+    COALESCE((b.unit_price * b.line_discount_pct),0) as discount_amount,
+    COALESCE((b.unit_price * b.tax_pct),0) as tax_amount,
+    COALESCE((b.qty * b.unit_price),0) as gross_amount_total,
+    COALESCE(((b.unit_price +(b.unit_price * b.tax_pct)) - (b.unit_price * b.line_discount_pct)),0) as net_amount_per_product,
+    COALESCE((((b.unit_price +(b.unit_price * b.tax_pct)) - (b.unit_price * b.line_discount_pct)) * b.qty),0) as net_amount_total
     from silver_orders as a
     inner join silver_order_lines as b on a.order_id = b.order_id
     inner join {{ ref('stg_customers') }} as c on a.customer_id = c.customer_id

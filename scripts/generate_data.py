@@ -6,9 +6,12 @@ import numpy as np
 from faker import Faker
 from mimesis import Person, Address, Datetime
 import rstr
+
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import xlsxwriter
+from pathlib import Path
 import json
 import random
 import uuid
@@ -38,7 +41,7 @@ def main():
     customers_path = out/'customers.csv'
     with customers_path.open('w', encoding='utf-8') as f:
         f.write('customer_id,natural_key,first_name,last_name,email,phone,address_line1,address_line2,city,state_region,postcode,country_code,latitude,longitude,birth_date,join_ts,is_vip,gdpr_consent\n')
-        for i in range(1, 80001):  # TODO raise to 80_000
+        for i in range(1, 85001):  # TODO raise to 80_000
             nk = 'CUST-' + rstr.rstr('A-Z0-9', 8)
             if random.random()>0.02:
                 nk = 'CUST-' + rstr.rstr('A-Z0-9', 8) 
@@ -287,16 +290,56 @@ def main():
             f.write(f"{sensor_ts},{store_id},{shelf_id},{temperature_c},{humidity_pct},{battery_mv}\n")
     invalid_count_sensors_total = invalid_count_sensors_temperature + invalid_count_sensors_humidity
     
-    #Exchange Rates
-    fake = Faker('en_AU')
-    exchange_rates_path = out/'exchange_rates.csv'
-    with exchange_rates_path.open('w', encoding='utf-8') as f:
-        f.write('date,currency,rate_to_aud\n')
-        for i in range(1, 1101):  
-            date_var = fake.date()
-            currency = fake.currency_name()
-            rate_to_aud = random.uniform(0,10000)
-            f.write(f"{date_var},{currency},{rate_to_aud}\n")
+    # --- SETUP ---
+    # Define the output directory (assuming 'out' is a Path object)
+    out = Path('data_raw/') 
+    # Create the directory if it doesn't exist
+    out.mkdir(exist_ok=True) 
+
+    def generate_valid_exchange_rates_excel(output_path: Path):
+        """
+        Generates a valid Excel (.xlsx) file using Pandas to ensure correct structure.
+        """
+        print(f"Generating data and writing to {output_path.name}...")
+    
+        # Initialize Faker for Australian locale
+        fake = Faker('en_AU')
+    
+        # Prepare the data as a list of dictionaries
+        data = []
+    
+        # Generate 1100 rows of fake data
+        for _ in range(1, 1101):
+            data.append({
+                'date': fake.date(),
+                # Using 'currency_code' is often better than 'currency_name' for analysis
+                'currency': fake.currency_code(), 
+                # Generating rates between 0.1 and 1000 for realism
+                'rate_to_aud': round(random.uniform(0.1, 1000), 4) 
+            })
+        
+        # Convert the list of dicts to a Pandas DataFrame
+        tbl = pd.DataFrame(data)
+    
+    # Write the DataFrame to a real XLSX file, using 'openpyxl' as the engine
+    # and ensuring the DataFrame index is not written as a column.
+        try:
+            tbl.to_excel(
+                output_path, 
+                sheet_name='Sheet1', 
+                index=False, 
+                engine='openpyxl'
+            )
+            print("Successfully created a valid XLSX file.")
+        except ImportError:
+            print("Error: 'openpyxl' is not installed. Please run 'pip install openpyxl'.")
+        except Exception as e:
+            print(f"An unexpected error occurred during file writing: {e}")
+
+    # --- EXECUTION ---
+    exchange_rates_path = out/'exchange_rates.xlsx'
+    generate_valid_exchange_rates_excel(exchange_rates_path)
+    
     # Shipments parquet sample
     tbl = pa.table({
         'shipment_id': pa.array(range(1, 10001), type=pa.int64()),
