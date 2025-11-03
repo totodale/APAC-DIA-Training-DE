@@ -2,7 +2,8 @@
     config(
         materialized='incremental',
         unique_key='sale_id',
-        on_schema_change='merge'
+        on_schema_change='append_new_columns',
+        contract={'enforced': true}
     )
 }}
 WITH silver_orders AS (

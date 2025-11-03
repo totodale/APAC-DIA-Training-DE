@@ -1,0 +1,105 @@
+models:
+  - name: fct_sales_gold
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - customer_id
+            - store_id
+            - line_number
+            - product_id
+    columns:
+      - name: sale_id
+        tests:
+          - not_null
+          - unique
+        data_type: varchar
+        constraints:
+          - type: not_null
+      - name: order_id
+        tests:
+          - relationships:
+              to: ref('order_lines_siver')
+              field: customer_id
+          - not_null
+          - unique
+        data_type: bigint
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('dim_customers_gold')
+              field: customer_id
+          - not_null
+          - unique
+        data_type: bigint
+      - name: store_id
+        tests:
+          - relationships:
+              to: ref('dim_store_gold')
+              field: store_id
+          - not_null
+          - unique
+        data_type: bigint
+      - name: ingestion_ts
+        data_type: 
+        tests:
+          - not_null
+          - unique
+        data_type: timestamp with time zone
+      - name: line_number
+        tests:
+          - not_null
+          - unique
+        data_type: bigint
+      - name: product_id
+        tests:
+          - relationships:
+              to: ref('dim_product_scd_gold')
+              field: product_id
+          - not_null
+          - unique
+        data_type: bigint
+      - name: date_id
+        tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_id
+          - not_null
+          - unique
+        data_type: bigint
+      - name: qty
+        tests:
+          - not_null
+        data_type: bigint
+      - name: unit_price
+        tests:
+          - not_null
+        data_type: double
+      - name: line_discount_pct
+        tests:
+          - not_null
+        data_type: double
+      - name: tax_pct
+        tests:
+          - not_null
+        data_type: double
+      - name: discount_amount
+        tests:
+          - not_null
+        data_type: double
+      - name: tax_amount
+        tests:
+          - not_null
+        data_type: double
+      - name: gross_amount_total
+        tests:
+          - not_null
+        data_type: double
+      - name: net_amount_per_product
+        tests:
+          - not_null
+        data_type: double
+      - name: net_amount_total
+        tests:
+          - not_null
+        data_type: double
