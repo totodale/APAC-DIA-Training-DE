@@ -10,7 +10,7 @@ select
     cast(qty as bigint) as qty,
     trim(reason) as reason,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts,
+    {{ normalize_timestamp('ingestion_ts') }} as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash
 from {{ ref('stg_returns') }}

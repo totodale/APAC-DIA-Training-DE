@@ -99,7 +99,7 @@ models:
           - type: not_null
         tests: [not_null]
       - name: ingestion_ts
-        data_type: timestamp
+        data_type: timestamp with time zone
         constraints:
           - type: not_null
         tests: [not_null]

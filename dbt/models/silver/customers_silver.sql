@@ -24,7 +24,7 @@ select
     cast(join_ts as timestamp) as join_ts,
     cast(is_vip as boolean) as is_vip,
     cast(gdpr_consent as boolean) as gdpr_consent,
-    cast(ingestion_ts as datetime) as ingestion_ts,
+    {{ normalize_timestamp('ingestion_ts') }} as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash,
     row_number() over (partition by natural_key order by natural_key) as row_number_natural_key
@@ -32,3 +32,4 @@ select
 )
 select * from getUniqueNaturalKey
 where address_line1 != 'null' and email != 'bad_email' and row_number_natural_key = 1
+

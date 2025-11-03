@@ -16,7 +16,7 @@ select
     cast(open_dt as date) as open_dt,
     cast(close_dt as date) as close_dt,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts,
+    {{ normalize_timestamp('ingestion_ts') }} as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash,
     row_number() over(partition by store_code order by store_code) as row_number_store_code

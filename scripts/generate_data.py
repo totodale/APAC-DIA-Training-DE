@@ -76,7 +76,7 @@ def main():
     product_categories = ["Electronics","Apparel","Home Goods","Books","Beauty","Sports & Outdoors","Toys & Games"]
     with products_path.open('w', encoding='utf-8') as f:
         f.write('product_id,sku,name,category,subcategory,current_price,currency,is_discontinued,introduced_dt,discontinued_dt\n')
-        for i in range(1, 25001):  # TODO raise to 80_000
+        for i in range(1, 27001):  # TODO raise to 80_000
             sku = 'SKU-' + rstr.rstr('[A-Z0-9]',8)
             name = fake.random_element(elements=product_name)
             category = fake.random_element(elements=product_categories)

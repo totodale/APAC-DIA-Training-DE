@@ -13,7 +13,7 @@ silver_order_lines AS (
 ),
 joined_data AS (
     SELECT
-    b.order_id || '-' || b.line_number AS sale_id,
+    COALESCE(b.order_id || '-' || b.line_number,'null') AS sale_id,
     a.order_id as order_id,
     a.customer_id as customer_id,
     a.store_id as store_id,

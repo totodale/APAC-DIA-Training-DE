@@ -13,7 +13,7 @@ select
     cast(line_discount_pct as double) as line_discount_pct,
     cast(tax_pct as double) as tax_pct,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts,
+    {{ normalize_timestamp('ingestion_ts') }} as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash,
     row_number() over (partition by product_id order by product_id) as row_number_product_id

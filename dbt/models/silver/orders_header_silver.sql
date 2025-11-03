@@ -16,7 +16,7 @@ select
     cast(shipping_fee as bigint) as shipping_fee,
     trim(currency) as currency,
     'FALSE' as isDeleted,
-    cast(ingestion_ts as datetime) as ingestion_ts,
+    {{ normalize_timestamp('ingestion_ts') }} as ingestion_ts,
     trim(src_filename) as src_filename,
     trim(src_hash) as src_hash,
     row_number() over (partition by order_id order by order_id) as row_number_order_id
