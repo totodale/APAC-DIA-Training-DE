@@ -1,5 +1,6 @@
 {{
-    config(materialized='table')
+    config(materialized='table',
+    contract={'enforced': true})
 }}
 
 WITH manifest_data AS (

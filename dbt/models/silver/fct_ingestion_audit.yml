@@ -1,0 +1,45 @@
+models:
+  - name: fct_ingestion_audit
+    columns:
+      - name: src_path
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: table_name
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: row_count
+        tests:
+          - not_null
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: total_reject_count
+        tests:
+          - not_null
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: total_valid_rows
+        tests:
+          - not_null
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: file_size_in_bytes
+        tests:
+          - not_null
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: processing_time_in_seconds
+        tests:
+          - not_null
+        data_type: double
+        constraints:
+          - type: not_null

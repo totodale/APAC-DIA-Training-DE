@@ -1,5 +1,6 @@
 {{
-    config(materialized='table')
+    config(materialized='table',
+    contract={'enforced': true})
 }}
 SELECT
 ship_Cost as shipping_cost,

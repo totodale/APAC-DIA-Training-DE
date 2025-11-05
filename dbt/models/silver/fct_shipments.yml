@@ -1,0 +1,45 @@
+models:
+  - name: fct_shipments
+    columns:
+      - name: shipping_cost
+        tests:
+          - not_null
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: delivery_days
+        tests:
+          - not_null
+        data_type: bigint
+        constraints:
+          - type: not_null
+      - name: on_time_flag
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: SLA_compliance
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: ingestion_ts
+        tests:
+          - not_null
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+      - name: src_filename
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: src_hash
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null

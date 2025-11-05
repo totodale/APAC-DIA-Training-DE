@@ -1,0 +1,39 @@
+models:
+  - name: fct_sensor_readings
+    columns:
+      - name: sensor_ts
+        tests:
+          - not_null
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+      - name: avg_temperature_c
+        tests:
+          - not_null
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: avg_humidity_pct
+        tests:
+          - not_null
+        data_type: double
+        constraints:
+          - type: not_null
+      - name: ingestion_ts
+        tests:
+          - not_null
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+      - name: src_filename
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null
+      - name: src_hash
+        tests:
+          - not_null
+        data_type: string
+        constraints:
+          - type: not_null
