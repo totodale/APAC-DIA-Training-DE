@@ -18,7 +18,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema, exchange_rates_schema, shipments_schema, returns_day1_schema, rejects_count_schema, rejects_count_total_schema
+from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema, exchange_rates_schema, shipments_schema, returns_day1_schema, rejects_count_schema, rejects_count_total_schema, generate_data_processing_time_schema
 
 try:
     from deltalake import write_deltalake
@@ -317,7 +317,7 @@ def load_exchange_rates(raw_root, lake_root, conn):
     tbl = pa.Table.from_pandas(tbl, preserve_index=False)
     tbl = tbl.cast(exchange_rates_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
-    fileName = "data_raw/exchange_rates.csv"
+    fileName = "data_raw/exchange_rates.xlsx"
     hash_list =[]
     for i in list(range(len(tbl))):
         data = str(random.getrandbits(32))
@@ -333,7 +333,7 @@ def load_exchange_rates(raw_root, lake_root, conn):
     dl_base = lake_root/'bronze'/'delta'/'exchange_rates'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
     write_delta(tbl, dl_base, mode='append')
-    ingestToTable(conn,'exchange_rates')
+    #ingestToTable(conn,'exchange_rates')
     mark_processed(conn, src, len(tbl))
     end_time = time.time()  
     processing_time = end_time - start_time
@@ -432,6 +432,19 @@ def load_rejects_count_total(raw_root, lake_root, conn):
     ingestToTable(conn,'rejects_count_total')
     mark_processed(conn, src, len(tbl))
 
+def load_generate_data_processing_time(raw_root, lake_root, conn):
+    src = raw_root/'generate_data_processing_time.csv'
+    if not src.exists(): return
+    if already_processed(conn, src): return
+    tbl = pacsv.read_csv(src, read_options=pacsv.ReadOptions(encoding='utf-8'))
+    tbl = tbl.cast(generate_data_processing_time_schema, safe=False)
+    pq_base = lake_root/'_rejects'/'parquet'/'generate_data_processing_time'
+    dl_base = lake_root/'_rejects'/'delta'/'generate_data_processing_time'
+    write_parquet_partitioned(tbl, pq_base, partitioning=None)
+    write_delta(tbl, dl_base, mode='append')
+    ingestToTable(conn,'generate_data_processing_time')
+    mark_processed(conn, src, len(tbl))
+
 
 def main():
     args = parse_args()
@@ -456,6 +469,7 @@ def main():
     load_returns(raw_root, lake_root, conn)
     load_rejects_count(raw_root, lake_root, conn)
     load_rejects_count_total(raw_root, lake_root, conn)
+    load_generate_data_processing_time(raw_root, lake_root, conn)
 
     print("✅ Bronze load completed for implemented loaders (extend for all tables).\n")
     
@@ -487,7 +501,7 @@ def main():
     file_size_bytes_orders_lines = os.path.getsize(src_orders_lines)
     print(f"orders_lines.csv file size in bytes: {file_size_bytes_orders_lines}")
 
-    src_exchange_rates = raw_root/'exchange_rates.csv'
+    src_exchange_rates = raw_root/'exchange_rates.xlsx'
     file_size_bytes_exchange_rates = os.path.getsize(src_exchange_rates)
     print(f"exchange_rates.csv file size in bytes: {file_size_bytes_exchange_rates}")
 

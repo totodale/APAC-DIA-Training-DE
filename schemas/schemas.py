@@ -129,3 +129,9 @@ rejects_count_total_schema = pa.schema([
 
 ])
 
+generate_data_processing_time_schema = pa.schema([
+    pa.field("table_name", pa.string()),
+    pa.field("processing_time_in_seconds", pa.float64()),
+
+])
+

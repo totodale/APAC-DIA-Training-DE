@@ -16,6 +16,8 @@ import json
 import random
 import uuid
 from datetime import datetime, timedelta
+import time
+from datetime import datetime
 
 
 def parse_args():
@@ -33,6 +35,7 @@ def main():
 
     # Minimal sample generation (expand to full volumes per docs)
     #Customers
+    start_time = time.time()
     fake = Faker('en_AU')
     invalid_count_customers_duplicate_natural_key = 0
     invalid_count_customers_bad_email = 0
@@ -65,8 +68,11 @@ def main():
             join_ts = datetime(2024,1,1) + timedelta(days=random.randint(0, 400), seconds=random.randint(0, 86399))
             f.write(f"{i},{nk},{fake.first_name()},{fake.last_name()},{email},{fake.phone_number().replace(',',' ')},{streetAddress},,{fake.city().replace(',',' ')},{fake.state_abbr()},{fake.postcode()},AU,{lat:.6f},{lon:.6f},{birth.isoformat()},{join_ts.isoformat()},{str(random.random()<0.15)},{str(random.random()>0.05)}\n")
     invalid_count_customers_total = invalid_count_customers_bad_email + invalid_count_customers_duplicate_natural_key + invalid_count_customers_null_address
+    end_time = time.time()  
+    customers_processing_time = end_time - start_time
     
     #Products
+    start_time = time.time()
     fake = Faker('en_AU')
     products_path = out/'products.csv'
     invalid_count_products_invalid_current_price = 0
@@ -98,8 +104,11 @@ def main():
                 invalid_count_products_null_discontinued_date = invalid_count_products_null_discontinued_date+ 1
             f.write(f"{i},{sku},{name},{category},{sub_category},{current_price},{currency},{is_discontinued},{introduced_dt},{discontinued_dt}\n")
     invalid_count_products_total = invalid_count_products_invalid_current_price + invalid_count_products_null_discontinued_date
-    
+    end_time = time.time()  
+    products_processing_time = end_time - start_time
+     
      #Stores
+    start_time = time.time()
     fake = Faker('en_AU')
     stores_path = out/'stores.csv'
     invalid_count_stores_latitude = 0
@@ -136,8 +145,11 @@ def main():
             open_dt = fake.date_between_dates(date_start=datetime(2000,1,1), date_end=datetime(2025,12,31))
             close_dt = fake.date_between(start_date = open_dt, end_date = open_dt + timedelta(days=720))
             f.write(f"{i},{store_code},{name},{channel},{region},{state},{latitude},{longitude},{open_dt},{close_dt}\n")
+    end_time = time.time()  
+    stores_processing_time = end_time - start_time
     
      #Suppliers
+    start_time = time.time()
     fake = Faker('en_AU')
     suppliers_path = out/'suppliers.csv'
     supplier_name = ["Syncee","Alibaba","Zendrop","Trendsi","Megagoods","DropCommerce"]
@@ -150,8 +162,11 @@ def main():
             lead_time_days = fake.numerify()
             preferred = fake.boolean()
             f.write(f"{i},{supplier_code},{name},{country_code},{lead_time_days},{preferred}\n")
-      
+    end_time = time.time()  
+    stores_processing_time = end_time - start_time  
+    
     #Orders Header
+    start_time = time.time()
     fake = Faker('en_AU')
     orders_header_path = out/'orders_header.csv'
     invalid_count_orders_header_customer_id = 0
@@ -185,8 +200,11 @@ def main():
             currency = fake.currency_name()
             f.write(f"{order_id},{order_ts},{order_dt_local},{customer_id},{store_id},{channel},{payment_method},{coupon_code},{shipping_fee},{currency}\n")
     invalid_count_orders_header_total = invalid_count_orders_header_duplicate_order_id + invalid_count_orders_header_customer_id
+    end_time = time.time()  
+    orders_header_processing_time = end_time - start_time 
     
     #Orders Lines
+    start_time = time.time()
     fake = Faker('en_AU')
     orders_lines_path = out/'orders_lines.csv'
     invalid_count_orders_lines_product_id = 0
@@ -213,6 +231,9 @@ def main():
             tax_pct = random.uniform(0.00,0.20)
             f.write(f"{i},{line_number},{product_id},{qty},{unit_price},{line_discount_pct},{tax_pct}\n")
     invalid_count_orders_lines_total = invalid_count_orders_lines_product_id + invalid_count_orders_lines_unit_price
+    end_time = time.time()  
+    orders_lines_processing_time = end_time - start_time
+
     """
 # Generate all events and group by date
     for i in range(1, num_events + 1):
@@ -263,6 +284,7 @@ def main():
                     f.write(line + "\n")
     """
     #Sensors
+    start_time = time.time()
     fake = Faker('en_AU')
     sensors_path = out/'sensors.csv'
     invalid_count_sensors_temperature = 0
@@ -289,7 +311,11 @@ def main():
             battery_mv = fake.numerify()
             f.write(f"{sensor_ts},{store_id},{shelf_id},{temperature_c},{humidity_pct},{battery_mv}\n")
     invalid_count_sensors_total = invalid_count_sensors_temperature + invalid_count_sensors_humidity
+    end_time = time.time()  
+    sensors_processing_time = end_time - start_time
     
+    #exchange_rates
+    start_time = time.time()
     # --- SETUP ---
     # Define the output directory (assuming 'out' is a Path object)
     out = Path('data_raw/') 
@@ -339,8 +365,11 @@ def main():
     # --- EXECUTION ---
     exchange_rates_path = out/'exchange_rates.xlsx'
     generate_valid_exchange_rates_excel(exchange_rates_path)
+    end_time = time.time()  
+    exchange_rates_processing_time = end_time - start_time
     
     # Shipments parquet sample
+    start_time = time.time()
     tbl = pa.table({
         'shipment_id': pa.array(range(1, 10001), type=pa.int64()),
         'order_id': pa.array(range(1, 10001), type=pa.int64()),
@@ -350,8 +379,11 @@ def main():
         'ship_cost': pa.array([1995]*10000, type=pa.int64()), #cast(pa.decimal128(12,2)
     })
     pq.write_table(tbl, out/'shipments.parquet', compression='snappy')
+    end_time = time.time()  
+    shipments_processing_time = end_time - start_time
     
     #returns
+    start_time = time.time()
     fake = Faker('en_AU')
     returns_path = out/'returns.csv'
     with returns_path.open('w', encoding='utf-8') as f:
@@ -364,6 +396,8 @@ def main():
             qty = fake.numerify()
             reason = 'Quality Issues' if random.random()>0.3 else 'Factory Defect' if random.random()>0.3 else 'Not Satisfied' if random.random()>0.4 else 'Reason Not Specified'
             f.write(f"{return_id},{order_id},{product_id},{return_ts},{qty},{reason}\n")
+    end_time = time.time()  
+    returns_processing_time = end_time - start_time
             
     #rejects
     rejects_path = out/'rejects_count.csv'
@@ -395,6 +429,21 @@ def main():
         f.write(f"orders_lines,{invalid_count_orders_lines_total}\n")
         f.write(f"sensors,{invalid_count_sensors_total}\n")
 
+    total_processing_time = customers_processing_time + products_processing_time + stores_processing_time + orders_header_processing_time + orders_lines_processing_time + sensors_processing_time + exchange_rates_processing_time + shipments_processing_time + returns_processing_time
+    #generate data processing time
+    generate_data_processing_time_path = out/'generate_data_processing_time.csv'
+    with generate_data_processing_time_path.open('w', encoding='utf-8') as f:
+        f.write('table_name,processing_time_in_seconds\n')
+        f.write(f"customers,{customers_processing_time}\n")
+        f.write(f"products,{products_processing_time}\n")
+        f.write(f"stores,{stores_processing_time}\n")
+        f.write(f"orders_header,{orders_header_processing_time}\n")
+        f.write(f"orders_lines,{orders_lines_processing_time}\n")
+        f.write(f"sensors,{sensors_processing_time}\n")
+        f.write(f"exchange_rates,{exchange_rates_processing_time}\n")
+        f.write(f"shipments,{shipments_processing_time}\n")
+        f.write(f"returns,{returns_processing_time}\n")
+        f.write(f"total_processing_time,{total_processing_time}\n")
 
     print(f"✅ Sample raw written to {out}. Expand to required volumes per /docs.\n")
     print(f"✅ Invalid Count for Bad Email Customers: {invalid_count_customers_bad_email} | Reason: Invalid Email Format")
