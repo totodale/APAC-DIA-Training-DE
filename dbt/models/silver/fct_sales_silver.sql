@@ -1,6 +1,6 @@
 {{
   config(
-    materialized='incremental',
+    materialized='table',
     unique_key='order_id',
     on_schema_change='merge'
   )

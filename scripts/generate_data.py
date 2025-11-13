@@ -234,55 +234,116 @@ def main():
     end_time = time.time()  
     orders_lines_processing_time = end_time - start_time
 
-    """
-# Generate all events and group by date
-    for i in range(1, num_events + 1):
-        if i % progress_interval == 0:
-            pct = (i / num_events) * 100
-            print(f"[events] Progress: {i:,}/{num_events:,} ({pct:.0f}%)")
-        # Assign event to a day
-            day_offset = i % days_span
-            event_date = (start_datetime + timedelta(days=day_offset)).date().isoformat()
-            # Build the event JSON
-            envelope = {
-                "event_id": f"evt-{i}",
-                "event_ts": iso(start_datetime + timedelta(days=day_offset, seconds=(i * 23) % 86400)),
-                "event_type": random.choice(["page_view", "add_to_cart", "purchase", "login", "logout"]),
-                "user_id": random.randint(1, self.sizes["customers"]) if random.random() > 0.01 else None,
-                "session_id": f"ses-{random.randint(1, 10_000_000)}",
+    # --- Configuration ---
+    start_time = time.time()
+    TARGET_ROWS = 10000  # Reduced to 10k for a manageable sample output
+    MALFORMED_RATE = 0.0005  # 0.05%
+    MISSING_FIELD_RATE = 0.0005  # 0.05% for missing envelope fields
+
+    # Calculate the number of rows for each anomaly
+    NUM_MALFORMED = int(TARGET_ROWS * MALFORMED_RATE)
+    NUM_MISSING = int(TARGET_ROWS * MISSING_FIELD_RATE)
+
+    # Define possible event types and variable payload structures
+    EVENT_TYPES = [
+        "page_view",
+        "item_add_to_cart",
+        "checkout_success",
+        "video_play",
+        "search_query",
+        ]
+    
+    # Function to generate a variable payload based on event_type
+    def generate_payload(event_type, user_id):
+        if event_type == "page_view":
+            return {
+                "page_url": f"/product/{random.randint(1000, 9999)}",
+                "time_on_page_ms": random.randint(500, 15000)
             }
-            payload = {
-                "details": {
-                    "path": f"/{self.fake.slug()}",
-                    "meta": {"x": random.randint(0, 100)}
-                }
+        elif event_type == "item_add_to_cart":
+            return {
+                "item_sku": f"SKU-{random.randint(100, 500)}",
+                "quantity": random.randint(1, 3),
+                "price": round(random.uniform(5.00, 100.00), 2)
             }
-            full_event = {"envelope": envelope, "payload": payload}
-            # Sometimes write malformed JSON
-            if random.random() < malformed_rate:
-                if random.random() < 0.5:
-                    json_str = json.dumps(full_event)[:-3]  # Truncate
-                else:
-                    json_str = json.dumps({"payload": payload})  # Missing envelope
-                if random.random() < 0.01:  # Log only 1% to avoid spam
-                    self.log_anomaly("events", "malformed_json", {"index": i})
-            else:
-                json_str = json.dumps(full_event)
-            # Add to buffer for this date
-            event_buffers[event_date].append(json_str)
-        # Now write all buffers to files
-        print(f"[events] Writing {len(event_buffers)} date partitions to disk...")
-        for event_date, json_lines in event_buffers.items():
-            # Create partition directory
-            partition_dir = output_base / f"event_dt={event_date}"
-            ensure_dir(partition_dir)
-            # This ensures ONE file per date partition
-            file_path = partition_dir / "events.jsonl"
-            # Write to file (all events for this date in one file)
-            with file_path.open("w", encoding="utf-8") as f:
-                for line in json_lines:
-                    f.write(line + "\n")
-    """
+        elif event_type == "checkout_success":
+            return {
+                "order_total": round(random.uniform(50.00, 500.00), 2),
+                "items_purchased": random.randint(1, 10),
+                "payment_method": random.choice(["credit_card", "paypal", "crypto"])
+            }
+        else: # Default/Other types
+            return {
+                "user_settings_version": random.choice(["v1", "v2"]),
+                "is_mobile": random.choice([True, False])
+            }
+
+    # --- Generation Logic ---
+    filename = "data_raw/events.jsonl"
+    print(f"Generating {TARGET_ROWS} events to {filename}...")
+    print(f"Injecting {NUM_MALFORMED} malformed lines and {NUM_MISSING} events with missing envelope fields.")
+
+    #Define anomaly count variables
+    invalid_count_events_malformed_json_line = 0
+    invalid_count_events_missing_required_envelope_field = 0
+    invalid_count_events_total = 0
+        
+    start_date = datetime.now() - timedelta(days=30)
+    
+    # Pre-determine which rows will have anomalies
+    anomaly_indices = random.sample(range(TARGET_ROWS), NUM_MALFORMED + NUM_MISSING)
+    malformed_indices = set(anomaly_indices[:NUM_MALFORMED])
+    missing_indices = set(anomaly_indices[NUM_MALFORMED:])
+    
+    with open(filename, 'w') as f:
+        for i in range(TARGET_ROWS):
+            
+            # --- 1. Envelope Fields (Partitioning & Required) ---
+            
+            # Simulate Partitioning by Event Date (based on event_ts)
+            current_date = start_date + timedelta(seconds=i * random.randint(1, 5)) 
+            
+            # Core Envelope Data
+            event_data = {
+                "event_id": f"evt-{i:07d}",
+                "event_ts": current_date.isoformat(),
+                "event_type": random.choice(EVENT_TYPES),
+                "user_id": f"usr-{random.randint(1000, 2000)}",
+                "session_id": f"sess-{random.randint(5000, 6000)}",
+            }
+            
+            # --- 2. Anomaly Injection ---
+            
+            if i in malformed_indices:
+                # ANOMALY: Malformed JSON Line
+                # Intentionally write an invalid JSON string
+                line = f"{{ \"event_id\": \"{event_data['event_id']}\", \"error_field\": \"This is not valid JSON."
+                f.write(line + '\n')
+                invalid_count_events_malformed_json_line = invalid_count_events_malformed_json_line + 1
+                continue # Skip normal processing
+            
+            if i in missing_indices:
+                # ANOMALY: Missing required envelope field (e.g., event_ts)
+                # Randomly remove one required envelope field
+                field_to_remove = random.choice(["event_id", "event_ts", "user_id"])
+                del event_data[field_to_remove]
+                invalid_count_events_missing_required_envelope_field = invalid_count_events_missing_required_envelope_field + 1
+                
+            # --- 3. Payload and Final Write ---
+            
+            # Add the flexible payload
+            event_data["payload"] = generate_payload(event_data.get("event_type"), event_data.get("user_id"))
+
+            # Write the final JSON object to the line
+            f.write(json.dumps(event_data) + '\n')
+
+    print("Generation complete. The file contains valid events, malformed lines, and events with missing envelope fields.")
+    invalid_count_events_total = invalid_count_events_malformed_json_line + invalid_count_events_missing_required_envelope_field
+
+    # Execute the script
+    end_time = time.time()  
+    events_processing_time = end_time - start_time
+    
     #Sensors
     start_time = time.time()
     fake = Faker('en_AU')
@@ -417,6 +478,8 @@ def main():
         f.write(f"Invalid Unit Price,{invalid_count_orders_lines_unit_price},orders_lines\n")
         f.write(f"Invalid Temperature Value,{invalid_count_sensors_temperature},sensors\n")
         f.write(f"Invalid Humidity Value,{invalid_count_sensors_humidity},sensors\n")
+        f.write(f"Invalid Malformed JSON line,{invalid_count_events_malformed_json_line},events\n")
+        f.write(f"Invalid Missing Required Envelope Field,{invalid_count_events_missing_required_envelope_field},events\n")
     
     #rejects total count
     rejects_total_path = out/'rejects_count_total.csv'
@@ -428,8 +491,9 @@ def main():
         f.write(f"orders_header,{invalid_count_orders_header_total}\n")
         f.write(f"orders_lines,{invalid_count_orders_lines_total}\n")
         f.write(f"sensors,{invalid_count_sensors_total}\n")
+        f.write(f"events,{invalid_count_events_total}\n")
 
-    total_processing_time = customers_processing_time + products_processing_time + stores_processing_time + orders_header_processing_time + orders_lines_processing_time + sensors_processing_time + exchange_rates_processing_time + shipments_processing_time + returns_processing_time
+    total_processing_time = customers_processing_time + products_processing_time + stores_processing_time + orders_header_processing_time + orders_lines_processing_time + sensors_processing_time + exchange_rates_processing_time + shipments_processing_time + returns_processing_time + events_processing_time
     #generate data processing time
     generate_data_processing_time_path = out/'generate_data_processing_time.csv'
     with generate_data_processing_time_path.open('w', encoding='utf-8') as f:
@@ -443,6 +507,7 @@ def main():
         f.write(f"exchange_rates,{exchange_rates_processing_time}\n")
         f.write(f"shipments,{shipments_processing_time}\n")
         f.write(f"returns,{returns_processing_time}\n")
+        f.write(f"events,{events_processing_time}\n")
         f.write(f"total_processing_time,{total_processing_time}\n")
 
     print(f"✅ Sample raw written to {out}. Expand to required volumes per /docs.\n")
@@ -470,6 +535,10 @@ def main():
     
     print(f"✅ Invalid Count for Temperature Sensors: {invalid_count_sensors_temperature} | Reason: Invalid Temperature Value")
     print(f"✅ Invalid Count for Humidity Sensors: {invalid_count_sensors_humidity} | Reason: Invalid Humidity Value")
-    print(f"✅ Invalid Count Total for Sensors: {invalid_count_sensors_total}")
+    print(f"✅ Invalid Count Total for Sensors: {invalid_count_sensors_total}\n")
+    
+    print(f"✅ Invalid Count for Malformed JSON Line Events: {invalid_count_events_malformed_json_line} | Reason: Malformed JSON line")
+    print(f"✅ Invalid Count for Missing Required Envelope Events: {invalid_count_events_missing_required_envelope_field} | Reason: Missing Required Envelope Field")
+    print(f"✅ Invalid Count Total for Sensors: {invalid_count_events_total}")
 if __name__ == '__main__':
     main()

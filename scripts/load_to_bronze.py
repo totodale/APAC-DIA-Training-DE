@@ -8,6 +8,7 @@ import pyarrow.csv as pacsv
 import pyarrow.dataset as pads
 import pyarrow.parquet as pq
 import pandas as pd
+import json
 import openpyxl
 import os, sys
 import random
@@ -18,7 +19,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
-from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema, exchange_rates_schema, shipments_schema, returns_day1_schema, rejects_count_schema, rejects_count_total_schema, generate_data_processing_time_schema
+from schemas.schemas import customers_schema, products_schema, stores_schema, suppliers_schema, orders_header_schema, orders_lines_schema, sensors_schema, exchange_rates_schema, shipments_schema, events_schema, returns_day1_schema, rejects_count_schema, rejects_count_total_schema, generate_data_processing_time_schema
 
 try:
     from deltalake import write_deltalake
@@ -406,6 +407,40 @@ def load_returns(raw_root, lake_root, conn):
     file_size_bytes_returns = os.path.getsize(src_returns)
     conn.execute(f"INSERT INTO pipeline_metrics values('returns',{file_size_bytes_returns},{processing_time})")
 
+def load_events(raw_root, lake_root, conn):
+    start_time = time.time()
+    src = raw_root/'events.jsonl'
+    if not src.exists(): return
+    if already_processed(conn, src): return
+    with open('data_raw/events.jsonl', 'r') as file:
+        json_data = json.load(file)
+    tbl = pd.DataFrame(json_data)
+    tbl = tbl.cast(events_schema, safe=False)
+    now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
+    fileName = "data_raw/events.jsonl"
+    hash_list =[]
+    for i in list(range(len(tbl))):
+        data = str(random.getrandbits(32))
+        hash_object = hashlib.sha256()
+        hash_object.update(data.encode('utf-8'))
+        hash_data = hash_object.hexdigest()
+        hash_list.append(hash_data)
+    row_hashes = [f"{i}" for i in hash_list]
+    tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
+    tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
+    tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
+    pq_base = lake_root/'bronze'/'parquet'/'returns'
+    dl_base = lake_root/'bronze'/'delta'/'returns'
+    write_parquet_partitioned(tbl, pq_base, partitioning=None)
+    write_delta(tbl, dl_base, mode='append')
+    ingestToTable(conn,'returns')
+    mark_processed(conn, src, len(tbl))
+    end_time = time.time()  
+    processing_time = end_time - start_time
+    src_returns = raw_root/'returns.csv'
+    file_size_bytes_returns = os.path.getsize(src_returns)
+    conn.execute(f"INSERT INTO pipeline_metrics values('returns',{file_size_bytes_returns},{processing_time})")
+
 def load_rejects_count(raw_root, lake_root, conn):
     src = raw_root/'rejects_count.csv'
     if not src.exists(): return
@@ -470,7 +505,8 @@ def main():
     load_rejects_count(raw_root, lake_root, conn)
     load_rejects_count_total(raw_root, lake_root, conn)
     load_generate_data_processing_time(raw_root, lake_root, conn)
-
+    load_events(raw_root, lake_root, conn)
+    
     print("✅ Bronze load completed for implemented loaders (extend for all tables).\n")
     
     src_customers = raw_root/'customers.csv'
