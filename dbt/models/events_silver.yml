@@ -1,0 +1,75 @@
+version: 2
+models:
+  - name: events_silver
+    config:
+      contract:
+        enforced: true
+      description: "events table"
+    columns: 
+      - name: event_id
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null, unique]
+      - name: event_ts
+        data_type: datetime
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: event_type
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: user_id
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null, unique]
+      - name: session_id
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null, unique]
+      - name: item_sku
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: quantity
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: price
+        data_type: double
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: user_settings_version
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: is_mobile
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: ingestion_ts
+        data_type: timestamp with time zone
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_filename
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+      - name: src_hash
+        data_type: string
+        constraints:
+          - type: not_null
+        tests: [not_null]
+
+   

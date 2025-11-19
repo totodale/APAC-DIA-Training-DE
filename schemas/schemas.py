@@ -79,9 +79,24 @@ orders_lines_schema = pa.schema([
     pa.field("line_discount_pct", pa.decimal128(5, 4)),
     pa.field("tax_pct", pa.decimal128(5, 4)),
 ])
-
+'''
 events_schema = pa.schema([
     pa.field("json", pa.string()),
+])
+'''
+events_schema = pa.schema([
+    pa.field('event_id', pa.string()),
+    pa.field('event_ts', pa.timestamp('us')),
+    pa.field('event_type', pa.string()),
+    pa.field('user_id', pa.string()),
+    pa.field('session_id', pa.string()),
+    pa.field('payload', pa.struct([
+        pa.field('item_sku', pa.string()),
+        pa.field('quantity', pa.int64()), 
+        pa.field('price', pa.float64()),  
+        pa.field('user_settings_version', pa.string()),
+        pa.field('is_mobile', pa.bool_()),
+    ]))
 ])
 
 sensors_schema = pa.schema([

@@ -412,9 +412,20 @@ def load_events(raw_root, lake_root, conn):
     src = raw_root/'events.jsonl'
     if not src.exists(): return
     if already_processed(conn, src): return
-    with open('data_raw/events.jsonl', 'r') as file:
-        json_data = json.load(file)
-    tbl = pd.DataFrame(json_data)
+    json_data = []
+    with open(src, 'r') as file:
+        for line in file:
+            if line.strip():
+                try:
+                    json_data.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing line: {line.strip()}. Error: {e}")
+    if not json_data: 
+        print(f"No valid data loaded from {src}. Exiting.")
+        return
+    fileName = str(src)
+    tbl_pd= pd.DataFrame(json_data)
+    tbl = pa.Table.from_pandas(tbl_pd)
     tbl = tbl.cast(events_schema, safe=False)
     now = pa.scalar(dt.datetime.utcnow(), type=pa.timestamp('us'))
     fileName = "data_raw/events.jsonl"
@@ -429,17 +440,17 @@ def load_events(raw_root, lake_root, conn):
     tbl = tbl.append_column('ingestion_ts', pa.array([now.as_py()]*len(tbl), type=pa.timestamp('us')))
     tbl = tbl.append_column('src_filename', pa.array([fileName]*len(tbl), type=pa.string()))
     tbl = tbl.append_column('src_hash', pa.array(row_hashes, type=pa.string()))
-    pq_base = lake_root/'bronze'/'parquet'/'returns'
-    dl_base = lake_root/'bronze'/'delta'/'returns'
+    pq_base = lake_root/'bronze'/'parquet'/'events'
+    dl_base = lake_root/'bronze'/'delta'/'events'
     write_parquet_partitioned(tbl, pq_base, partitioning=None)
     write_delta(tbl, dl_base, mode='append')
-    ingestToTable(conn,'returns')
+    #ingestToTable(conn,'events')
     mark_processed(conn, src, len(tbl))
     end_time = time.time()  
     processing_time = end_time - start_time
-    src_returns = raw_root/'returns.csv'
-    file_size_bytes_returns = os.path.getsize(src_returns)
-    conn.execute(f"INSERT INTO pipeline_metrics values('returns',{file_size_bytes_returns},{processing_time})")
+    src_events = raw_root/'events.jsonl'
+    file_size_bytes_events = os.path.getsize(src_events)
+    conn.execute(f"INSERT INTO pipeline_metrics values('events',{file_size_bytes_events},{processing_time})")
 
 def load_rejects_count(raw_root, lake_root, conn):
     src = raw_root/'rejects_count.csv'
@@ -544,6 +555,10 @@ def main():
     src_shipments = raw_root/'shipments.parquet'
     file_size_bytes_shipments = os.path.getsize(src_shipments)
     print(f"shipments.parquet file size in bytes: {file_size_bytes_shipments}")
+    
+    src_events = raw_root/'events.jsonl'
+    file_size_bytes_events = os.path.getsize(src_events)
+    print(f"events.jsonl file size in bytes: {file_size_bytes_events}")
     
 if __name__ == '__main__':
     main()
